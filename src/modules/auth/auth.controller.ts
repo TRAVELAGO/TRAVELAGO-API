@@ -7,18 +7,16 @@ import {
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { ApiTags } from '@nestjs/swagger';
-import { LoginDto } from './dtos/login-dto';
+import { LoginDto } from './dtos/login.dto';
 import { User } from '@modules/user/user.entity';
-import { RegisterDto } from './dtos/register-dto';
+import { RegisterDto } from './dtos/register.dto';
 @ApiTags('Auth')
 @Controller('auth')
 export class AuthController {
   constructor(private authService: AuthService) {}
 
   @Post('register')
-  register(@Body() registerDto: RegisterDto): Promise<User> {
-    console.log('register API');
-    console.log(registerDto);
+  register(@Body() registerDto: RegisterDto): Promise<Partial<User>> {
     return this.authService.register(registerDto);
   }
 

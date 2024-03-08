@@ -12,17 +12,14 @@ export class User {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ length: 40 })
-  username: string;
+  @Column({ unique: true })
+  email: string;
 
   @Column({ length: 100 })
   password: string;
 
   @Column({ length: 100 })
   fullName: string;
-
-  @Column({ unique: true })
-  email: string;
 
   @Column({ unique: true })
   phoneNumber: string;
@@ -39,7 +36,7 @@ export class User {
   @Column({ default: UserStatus.ACTIVE })
   status: UserStatus;
 
-  @Column()
+  @Column({ nullable: true })
   refreshToken: string;
 
   @CreateDateColumn({ type: 'timestamp' })
