@@ -5,8 +5,6 @@ import {
   PrimaryGeneratedColumn,
   CreateDateColumn,
   UpdateDateColumn,
-  JoinColumn,
-  ManyToOne,
 } from 'typeorm';
 
 @Entity()
@@ -14,13 +12,13 @@ export class User {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column()
-  userName: string;
+  @Column({ length: 40 })
+  username: string;
 
-  @Column()
-  passWord: string;
+  @Column({ length: 100 })
+  password: string;
 
-  @Column()
+  @Column({ length: 100 })
   fullName: string;
 
   @Column({ unique: true })
@@ -43,14 +41,6 @@ export class User {
 
   @Column()
   refreshToken: string;
-
-  @ManyToOne(() => User, { nullable: true })
-  @JoinColumn({ name: 'createdBy' })
-  createdBy: User;
-
-  @ManyToOne(() => User, { nullable: true })
-  @JoinColumn({ name: 'updatedBy' })
-  updatedBy: User;
 
   @CreateDateColumn({ type: 'timestamp' })
   createdAt: Date;

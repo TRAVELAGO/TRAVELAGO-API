@@ -9,7 +9,7 @@ export class RegisterDto {
 
   @ApiProperty()
   @IsNotEmpty()
-  passWord: string;
+  password: string;
 
   @IsNotEmpty()
   // @IsPhoneNumber()
@@ -19,7 +19,7 @@ export class RegisterDto {
   fullName: string;
 
   @IsNotEmpty()
-  userName: string;
+  username: string;
 
   refreshToken: string;
 }

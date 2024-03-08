@@ -15,11 +15,11 @@ export class AuthService {
   ) {}
 
   async register(registerDto: RegisterDto): Promise<User> {
-    const hashPassword = await this.hashPassword(registerDto.passWord);
+    const hashPassword = await this.hashPassword(registerDto.password);
     return await this.userRepository.save({
       ...registerDto,
       refreshTocken: 'refreshToken',
-      passWord: hashPassword,
+      password: hashPassword,
     });
   }
 
@@ -32,7 +32,7 @@ export class AuthService {
       throw new HttpException('Email is not exsit', HttpStatus.UNAUTHORIZED);
     }
 
-    const checkPass = bcrypt.compareSync(loginDto.passWord, user.passWord);
+    const checkPass = bcrypt.compareSync(loginDto.password, user.password);
     if (!checkPass) {
       throw new HttpException(
         'Password is not correct',
