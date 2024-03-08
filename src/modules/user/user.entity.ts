@@ -14,11 +14,11 @@ export class User {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ unique: true })
-  username: string;
+  @Column()
+  userName: string;
 
   @Column()
-  password: string;
+  passWord: string;
 
   @Column()
   fullName: string;
@@ -27,7 +27,7 @@ export class User {
   email: string;
 
   @Column({ unique: true })
-  phone: string;
+  phoneNumber: string;
 
   @Column({ default: RoleType.USER })
   role: RoleType;
@@ -40,6 +40,9 @@ export class User {
 
   @Column({ default: UserStatus.ACTIVE })
   status: UserStatus;
+
+  @Column()
+  refreshToken: string;
 
   @ManyToOne(() => User, { nullable: true })
   @JoinColumn({ name: 'createdBy' })
