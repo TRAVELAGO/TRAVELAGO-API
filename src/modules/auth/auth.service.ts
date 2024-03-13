@@ -38,16 +38,7 @@ export class AuthService {
     });
 
     if (existedUser) {
-      // if (existedUser.isVerified) {
       throw new BadRequestException('Email has been verified.');
-      // } else {
-      // throw new UnauthorizedException(
-      //   {
-      //     email: existedUser.email,
-      //   },
-      //   'Email has been registered but not authenticated.',
-      // );
-      // }
     }
 
     const hashPassword = await this.hashPassword(registerDto.password);

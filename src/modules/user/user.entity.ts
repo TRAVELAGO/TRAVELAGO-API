@@ -21,14 +21,14 @@ export class User {
   @Column({ length: 100 })
   fullName: string;
 
+  @Column({ nullable: true })
+  address: string;
+
   @Column({ unique: true })
   phoneNumber: string;
 
   @Column({ default: RoleType.USER })
   role: RoleType;
-
-  @Column({ default: false })
-  isVerified: boolean;
 
   @Column({ nullable: true, default: null })
   avatar: string;
