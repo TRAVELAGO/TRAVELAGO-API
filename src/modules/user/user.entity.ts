@@ -5,8 +5,6 @@ import {
   PrimaryGeneratedColumn,
   CreateDateColumn,
   UpdateDateColumn,
-  JoinColumn,
-  ManyToOne,
 } from 'typeorm';
 
 @Entity()
@@ -15,25 +13,22 @@ export class User {
   id: number;
 
   @Column({ unique: true })
-  username: string;
-
-  @Column()
-  password: string;
-
-  @Column()
-  fullName: string;
-
-  @Column({ unique: true })
   email: string;
 
+  @Column({ length: 100 })
+  password: string;
+
+  @Column({ length: 100 })
+  fullName: string;
+
+  @Column({ nullable: true })
+  address: string;
+
   @Column({ unique: true })
-  phone: string;
+  phoneNumber: string;
 
   @Column({ default: RoleType.USER })
   role: RoleType;
-
-  @Column({ default: false })
-  isVerified: boolean;
 
   @Column({ nullable: true, default: null })
   avatar: string;
@@ -41,13 +36,8 @@ export class User {
   @Column({ default: UserStatus.ACTIVE })
   status: UserStatus;
 
-  @ManyToOne(() => User, { nullable: true })
-  @JoinColumn({ name: 'createdBy' })
-  createdBy: User;
-
-  @ManyToOne(() => User, { nullable: true })
-  @JoinColumn({ name: 'updatedBy' })
-  updatedBy: User;
+  @Column({ nullable: true })
+  refreshToken: string;
 
   @CreateDateColumn({ type: 'timestamp' })
   createdAt: Date;
