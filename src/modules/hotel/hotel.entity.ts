@@ -8,7 +8,6 @@ import {
   PrimaryGeneratedColumn,
   CreateDateColumn,
   UpdateDateColumn,
-  OneToOne,
   ManyToOne,
   OneToMany,
   Index,
@@ -30,6 +29,9 @@ export class Hotel {
   rate: number;
 
   @Column({ nullable: true })
+  address: string;
+
+  @Column({ nullable: true })
   description: string;
 
   @Column({ default: HotelStatus.OPEN })
@@ -47,7 +49,7 @@ export class Hotel {
   @UpdateDateColumn({ type: 'timestamp' })
   updatedAt: Date;
 
-  @OneToOne(() => User)
+  @ManyToOne(() => User)
   user: User;
 
   @ManyToOne(() => City, (city) => city.hotels)

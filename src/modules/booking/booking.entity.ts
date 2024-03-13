@@ -1,7 +1,7 @@
 import { BookingStatus } from '@constants/index';
-import { BookingDetail } from '@modules/booking-detail/booking-detail.entity';
 import { Hotel } from '@modules/hotel/hotel.entity';
 import { Payment } from '@modules/payment/payment.entity';
+import { Room } from '@modules/room/room.entity';
 import { User } from '@modules/user/user.entity';
 import {
   Entity,
@@ -11,7 +11,6 @@ import {
   UpdateDateColumn,
   ManyToOne,
   OneToOne,
-  OneToMany,
 } from 'typeorm';
 
 @Entity()
@@ -46,8 +45,8 @@ export class Booking {
   @ManyToOne(() => Hotel)
   hotel: Hotel;
 
-  @OneToMany(() => BookingDetail, (bookingDetail) => bookingDetail.booking)
-  bookingDetails: BookingDetail[];
+  @ManyToOne(() => Room, (room) => room.bookings)
+  room: Room;
 
   @OneToOne(() => Payment, (payment) => payment.booking)
   payment: Payment;

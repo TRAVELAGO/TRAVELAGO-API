@@ -1,4 +1,4 @@
-import { BookingDetail } from '@modules/booking-detail/booking-detail.entity';
+import { Booking } from '@modules/booking/booking.entity';
 import { Feedback } from '@modules/feedback/feedback.entity';
 import { Hotel } from '@modules/hotel/hotel.entity';
 import { RoomType } from '@modules/room-type/room-type.entity';
@@ -62,6 +62,6 @@ export class Room {
   @OneToMany(() => Feedback, (feedback) => feedback.room)
   feedbacks: Feedback[];
 
-  @OneToMany(() => BookingDetail, (bookingDetail) => bookingDetail.room)
-  bookingDetails: BookingDetail[];
+  @OneToMany(() => Booking, (booking) => booking.room)
+  bookings: Booking[];
 }
