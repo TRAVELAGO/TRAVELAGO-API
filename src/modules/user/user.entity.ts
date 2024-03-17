@@ -18,7 +18,7 @@ export class User {
   userName: string;
 
   @Column()
-  passWord: string;
+  password: string;
 
   @Column()
   fullName: string;
@@ -43,6 +43,9 @@ export class User {
 
   @Column()
   refreshToken: string;
+
+  @Column()
+  passwordToken: string;
 
   @ManyToOne(() => User, { nullable: true })
   @JoinColumn({ name: 'createdBy' })

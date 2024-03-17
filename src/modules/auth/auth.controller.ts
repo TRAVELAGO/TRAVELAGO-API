@@ -10,6 +10,7 @@ import { ApiTags } from '@nestjs/swagger';
 import { LoginDto } from './dtos/login-dto';
 import { User } from '@modules/user/user.entity';
 import { RegisterDto } from './dtos/register-dto';
+import { forgotPasswordDto } from './dtos/forgotPassword.dto';
 @ApiTags('Auth')
 @Controller('auth')
 export class AuthController {
@@ -34,5 +35,19 @@ export class AuthController {
   refreshToken(@Body() { refreshToken }): Promise<any> {
     console.log('refresh token api');
     return this.authService.refreshToken(refreshToken);
+  }
+
+
+  @Post('send-email-code')
+  sendEmailCode(@Body('email') email:string): Promise<any> {
+    console.log('send email code api');
+    return this.authService.sendEmailForgotPassword(email);
+  }
+
+  @Post('forgotPassword')
+  forgotPassword(@Body() forgotPassword: forgotPasswordDto): Promise<any> {
+    console.log('forgot password API');
+    return this.authService.forgotPassword(forgotPassword);
+
   }
 }
