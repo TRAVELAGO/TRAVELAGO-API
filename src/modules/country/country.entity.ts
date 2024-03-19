@@ -9,8 +9,8 @@ import {
 
 @Entity()
 export class Country {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   @Column({ length: 120 })
   @Index({ fulltext: true })

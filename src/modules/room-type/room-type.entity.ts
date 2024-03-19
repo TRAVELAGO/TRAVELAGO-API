@@ -10,8 +10,8 @@ import {
 
 @Entity()
 export class RoomType {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   @Column({ length: 120 })
   bedType1: string;
