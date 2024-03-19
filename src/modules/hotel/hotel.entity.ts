@@ -15,14 +15,16 @@ import {
 
 @Entity()
 export class Hotel {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   @Column({ length: 120 })
   @Index({ fulltext: true })
   name: string;
 
-  @Column('simple-array')
+  @Column('json', {
+    nullable: true,
+  })
   images: string[];
 
   @Column({ type: 'decimal', precision: 2, scale: 1, nullable: true })

@@ -11,8 +11,8 @@ import {
 
 @Entity()
 export class Feedback {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   @Column({ type: 'decimal', precision: 2, scale: 1, nullable: true })
   rate: number;

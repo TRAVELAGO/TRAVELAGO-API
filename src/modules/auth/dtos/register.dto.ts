@@ -2,7 +2,9 @@ import { RoleType } from '@constants/role-type';
 import { ApiProperty } from '@nestjs/swagger';
 import {
   IsEmail,
+  IsEnum,
   IsNotEmpty,
+  IsOptional,
   IsPhoneNumber,
   IsString,
   Matches,
@@ -45,8 +47,10 @@ export class RegisterDto {
   fullName: string;
 
   @ApiProperty({ default: RoleType.USER })
+  @IsEnum(RoleType)
   role: RoleType;
 
   @ApiProperty()
-  hotelName: string;
+  @IsOptional()
+  hotelName?: string;
 }

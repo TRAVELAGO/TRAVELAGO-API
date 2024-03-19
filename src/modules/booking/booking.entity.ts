@@ -15,8 +15,8 @@ import {
 
 @Entity()
 export class Booking {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   @Column({ default: BookingStatus.PENDING })
   status: BookingStatus;

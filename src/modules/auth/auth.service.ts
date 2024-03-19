@@ -6,7 +6,7 @@ import {
   Injectable,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { LoginDto } from './dtos/login.dto';
 import { User } from '@modules/user/user.entity';
@@ -18,49 +18,67 @@ import { RoleType } from '@constants/role-type';
 export class AuthService {
   constructor(
     @InjectRepository(User) private userRepository: Repository<User>,
-    @InjectRepository(User) private hotelRepository: Repository<Hotel>,
+    @InjectRepository(Hotel) private hotelRepository: Repository<Hotel>,
+    private dataSource: DataSource,
     private jwtService: JwtService,
   ) {}
 
   async register(registerDto: RegisterDto): Promise<Partial<User>> {
-    const phoneExists = await this.userRepository.exists({
-      where: {
-        phoneNumber: registerDto.phoneNumber,
-      },
-    });
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
 
-    if (phoneExists) {
-      throw new BadRequestException('Phone number already exists.');
-    }
-
-    const existedUser = await this.userRepository.findOne({
-      where: { email: registerDto.email },
-    });
-
-    if (existedUser) {
-      throw new BadRequestException('Email has been verified.');
-    }
-
-    const hashPassword = await this.hashPassword(registerDto.password);
-
-    const newUser = await this.userRepository.save({
-      ...registerDto,
-      password: hashPassword,
-    });
-
-    if (newUser.role === RoleType.HOTEL) {
-      const newHotel = this.hotelRepository.create({
-        user: newUser,
-        name: registerDto?.hotelName,
+    try {
+      const phoneExists = await this.userRepository.exists({
+        where: {
+          phoneNumber: registerDto.phoneNumber,
+        },
       });
-      await this.hotelRepository.save(newHotel);
-    }
 
-    return {
-      id: newUser.id,
-      email: newUser.email,
-      fullName: newUser.fullName,
-    };
+      if (phoneExists) {
+        throw new BadRequestException('Phone number already exists.');
+      }
+
+      const existedUser = await this.userRepository.findOne({
+        where: { email: registerDto.email },
+      });
+
+      if (existedUser) {
+        throw new BadRequestException('Email has been verified.');
+      }
+
+      const hashPassword = await this.hashPassword(registerDto.password);
+
+      const newUser = await this.userRepository.create({
+        ...registerDto,
+        password: hashPassword,
+      });
+
+      await queryRunner.manager.save(newUser);
+
+      if (newUser.role === RoleType.HOTEL) {
+        const newHotel = this.hotelRepository.create({
+          user: newUser,
+          name: registerDto?.hotelName,
+          images: [],
+        });
+        await queryRunner.manager.save(newHotel);
+      }
+
+      await queryRunner.commitTransaction();
+
+      return {
+        id: newUser.id,
+        email: newUser.email,
+        fullName: newUser.fullName,
+        role: newUser.role,
+      };
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
   }
 
   async login(loginDto: LoginDto): Promise<any> {
@@ -90,11 +108,11 @@ export class AuthService {
         secret: '1234567',
       });
       console.log(verify);
-      const checkExsitToken = await this.userRepository.findOneBy({
+      const checkExistToken = await this.userRepository.findOneBy({
         email: verify.email,
         refreshToken,
       });
-      if (checkExsitToken) {
+      if (checkExistToken) {
         return this.generateToken({ id: verify.id, email: verify.email });
       } else {
         throw new HttpException(
@@ -110,7 +128,7 @@ export class AuthService {
     }
   }
 
-  async generateToken(payload: { id: number; email: string }) {
+  async generateToken(payload: { id: string; email: string }) {
     const accessToken = await this.jwtService.signAsync(payload);
     const refreshToken = await this.jwtService.signAsync(payload, {
       secret: '1234567',

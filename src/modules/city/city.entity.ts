@@ -11,8 +11,8 @@ import {
 
 @Entity()
 export class City {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   @Column({ length: 120 })
   @Index({ fulltext: true })
