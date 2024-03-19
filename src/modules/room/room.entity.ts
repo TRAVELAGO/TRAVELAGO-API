@@ -14,8 +14,8 @@ import {
 
 @Entity()
 export class Room {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   @Column({ length: 100 })
   name: string;
@@ -23,10 +23,12 @@ export class Room {
   @Column({ type: 'decimal', precision: 10, scale: 2 })
   price: number;
 
-  @Column({ type: 'decimal', precision: 10, scale: 2 })
+  @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })
   discount: number;
 
-  @Column('simple-array')
+  @Column('json', {
+    nullable: true,
+  })
   images: string[];
 
   @Column()
@@ -44,7 +46,9 @@ export class Room {
   @Column({ type: 'float', nullable: true })
   area: number;
 
-  @Column('simple-array')
+  @Column('json', {
+    nullable: true,
+  })
   roomAmenities: number[];
 
   @CreateDateColumn({ type: 'timestamp' })

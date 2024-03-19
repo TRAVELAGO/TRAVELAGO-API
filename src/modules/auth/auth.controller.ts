@@ -16,20 +16,20 @@ export class AuthController {
   constructor(private authService: AuthService) {}
 
   @Post('register')
-  register(@Body() registerDto: RegisterDto): Promise<Partial<User>> {
+  async register(@Body() registerDto: RegisterDto): Promise<Partial<User>> {
     return this.authService.register(registerDto);
   }
 
   @Post('login')
   @UsePipes(ValidationPipe)
-  login(@Body() loginDto: LoginDto): Promise<User> {
+  async login(@Body() loginDto: LoginDto): Promise<User> {
     console.log('login API');
     console.log(loginDto);
     return this.authService.login(loginDto);
   }
 
   @Post('refresh-token')
-  refreshToken(@Body() { refreshToken }): Promise<any> {
+  async refreshToken(@Body() { refreshToken }): Promise<any> {
     console.log('refresh token api');
     return this.authService.refreshToken(refreshToken);
   }
