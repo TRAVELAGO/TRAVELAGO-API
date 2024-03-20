@@ -9,6 +9,7 @@ import {
   UpdateDateColumn,
   ManyToOne,
   OneToOne,
+  JoinTable,
 } from 'typeorm';
 
 @Entity()
@@ -38,5 +39,6 @@ export class Payment {
   user: User;
 
   @OneToOne(() => Booking, (booking) => booking.payment)
+  @JoinTable()
   booking: Booking;
 }
