@@ -28,6 +28,10 @@ export class AuthService {
   ) {}
 
   async register(registerDto: RegisterDto): Promise<Partial<User>> {
+    if (registerDto.role === RoleType.ADMIN) {
+      throw new BadRequestException('Unable to register for admin role.');
+    }
+
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
