@@ -11,6 +11,7 @@ import {
   ManyToOne,
   OneToMany,
   Index,
+  JoinColumn,
 } from 'typeorm';
 
 @Entity()
@@ -52,6 +53,7 @@ export class Hotel {
   updatedAt: Date;
 
   @ManyToOne(() => User)
+  @JoinColumn({ name: 'userId' })
   user: User;
 
   @ManyToOne(() => City, (city) => city.hotels)
