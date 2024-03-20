@@ -1,4 +1,5 @@
 import { RoleType, UserStatus } from '@constants/index';
+import { Exclude } from 'class-transformer';
 import {
   Entity,
   Column,
@@ -16,6 +17,7 @@ export class User {
   email: string;
 
   @Column({ length: 100 })
+  @Exclude({ toPlainOnly: true })
   password: string;
 
   @Column({ length: 100 })
@@ -37,6 +39,7 @@ export class User {
   status: UserStatus;
 
   @Column({ nullable: true })
+  @Exclude({ toPlainOnly: true })
   refreshToken: string;
 
   @CreateDateColumn({ type: 'timestamp' })
