@@ -1,14 +1,14 @@
 import { FindManyOptions } from 'typeorm';
 
-export function getPaginationOption(
+export function getPaginationOption<T>(
   pageNumber?: number,
   pageSize?: number,
-): FindManyOptions {
+): FindManyOptions<T> {
   if (pageNumber && pageSize) {
     // pageNumber < 1 => pageNumber = 1
     pageNumber = pageNumber < 1 ? 1 : pageNumber;
     // pagination
-    const paginationOption: FindManyOptions = {
+    const paginationOption: FindManyOptions<T> = {
       take: pageSize,
       skip: (pageNumber - 1) * pageSize,
     };
