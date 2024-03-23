@@ -22,31 +22,38 @@ import { JwtPayloadType } from '@modules/auth/strategies/types/jwt-payload.type'
 import { RolesGuard } from '@modules/auth/guards/roles.guard';
 import { Roles } from 'src/decorators/roles.decorator';
 import { RoleType } from '@constants/role-type';
+import { SearchRoomDto } from './dtos/seach-room.dto';
 
 @ApiTags('Rooms')
-@Controller('rooms')
+@Controller()
 export class RoomController {
   constructor(private roomService: RoomService) {}
 
-  @Get(':id')
+  @Get('rooms/:id')
   @ApiResponse({ status: 200, description: 'Successfully.' })
   @ApiResponse({ status: 404, description: 'Room not found.' })
   async find(@Param('id') roomId: string): Promise<Room> {
     return this.roomService.find(roomId);
   }
 
-  @Get()
+  @Get('rooms')
   @ApiResponse({ status: 200, description: 'Successfully.' })
   @ApiQuery({ name: 'page-number', required: false, type: Number })
   @ApiQuery({ name: 'page-size', required: false, type: Number })
-  async findAll(
-    @Query('page-number') pageNumber?: number,
-    @Query('page-size') pageSize?: number,
-  ): Promise<Room[]> {
-    return this.roomService.findAll(pageNumber, pageSize);
+  async search(@Query() searchRoomDto: SearchRoomDto): Promise<Room[]> {
+    return this.roomService.search(searchRoomDto);
   }
 
-  @Post()
+  @Get('hotels/:hotelId/rooms')
+  @ApiResponse({ status: 200, description: 'Successfully.' })
+  async searchHotelRoom(
+    @Param('hotelId') hotelId: string,
+    @Query() searchRoomDto: SearchRoomDto,
+  ): Promise<Room[]> {
+    return this.roomService.search(searchRoomDto, hotelId);
+  }
+
+  @Post('hotels/:hotelId/rooms')
   @ApiResponse({ status: 201, description: 'Create room successfully.' })
   @ApiResponse({ status: 400, description: 'Validation failure.' })
   @ApiBearerAuth()
@@ -54,12 +61,13 @@ export class RoomController {
   @Roles([RoleType.HOTEL])
   async create(
     @GetJwtPayload() user: JwtPayloadType,
+    @Param('hotelId') hotelId: string,
     @Body() createRoomDto: CreateRoomDto,
   ): Promise<any> {
-    return this.roomService.create(user.id, createRoomDto);
+    return this.roomService.create(user.id, hotelId, createRoomDto);
   }
 
-  @Patch(':id')
+  @Patch('rooms/:id')
   @ApiResponse({ status: 200, description: 'Update room successfully.' })
   @ApiResponse({ status: 400, description: 'Validation failure.' })
   @ApiResponse({ status: 404, description: 'Room does not exist.' })
@@ -75,7 +83,7 @@ export class RoomController {
     return this.roomService.update(user.id, roomId, updateRoomDto);
   }
 
-  @Delete(':id')
+  @Delete('rooms/:id')
   @ApiResponse({ status: 204, description: 'Delete room successfully.' })
   @ApiResponse({ status: 404, description: 'Room not found.' })
   @HttpCode(HttpStatus.NO_CONTENT)

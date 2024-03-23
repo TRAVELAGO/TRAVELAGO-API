@@ -54,8 +54,4 @@ export class CreateRoomDto {
   @ApiProperty()
   @IsNotEmpty()
   roomTypeId: string;
-
-  @ApiProperty()
-  @IsNotEmpty()
-  hotelId: string;
 }

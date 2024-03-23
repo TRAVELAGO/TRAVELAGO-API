@@ -1,5 +1,5 @@
 import { RoleType } from '@constants/role-type';
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
   IsEmail,
   IsEnum,
@@ -50,7 +50,7 @@ export class RegisterDto {
   @IsEnum(RoleType)
   role: RoleType;
 
-  @ApiProperty()
+  @ApiPropertyOptional()
   @IsOptional()
   hotelName?: string;
 }

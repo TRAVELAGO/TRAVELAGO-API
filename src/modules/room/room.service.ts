@@ -6,11 +6,19 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { FindManyOptions, Repository } from 'typeorm';
+import {
+  FindManyOptions,
+  FindOptionsWhere,
+  Like,
+  MoreThanOrEqual,
+  Repository,
+} from 'typeorm';
 import { Room } from './room.entity';
 import { CreateRoomDto } from './dtos/create-room.dto';
 import { RoomType } from '@modules/room-type/room-type.entity';
 import { getPaginationOption } from 'src/utils/pagination';
+import { SearchRoomDto } from './dtos/seach-room.dto';
+import { between } from 'src/utils/find-option';
 
 @Injectable()
 export class RoomService {
@@ -35,16 +43,23 @@ export class RoomService {
     return existedRoom;
   }
 
-  async findAll(pageNumber?: number, pageSize?: number): Promise<Room[]> {
-    const findManyOption: FindManyOptions = getPaginationOption(
-      pageNumber,
-      pageSize,
+  async search(
+    searchRoomDto: SearchRoomDto,
+    hotelId?: string,
+  ): Promise<Room[]> {
+    const findManyOption: FindManyOptions<Room> = this.getFindManyOption(
+      searchRoomDto,
+      hotelId,
     );
 
     return await this.roomRepository.find(findManyOption);
   }
 
-  async create(userId: string, createRoomDto: CreateRoomDto): Promise<Room> {
+  async create(
+    userId: string,
+    hotelId: string,
+    createRoomDto: CreateRoomDto,
+  ): Promise<Room> {
     const newRoom = this.roomRepository.create({
       ...createRoomDto,
       currentAvailable: createRoomDto.total,
@@ -52,7 +67,7 @@ export class RoomService {
 
     const existedHotel = await this.hotelRepository
       .createQueryBuilder('hotel')
-      .where('hotel.id = :hotelId', { hotelId: createRoomDto.hotelId })
+      .where('hotel.id = :hotelId', { hotelId: hotelId })
       .andWhere('hotel.userId = :userId', { userId })
       .getOne();
 
@@ -138,5 +153,41 @@ export class RoomService {
         .select('hotel')
         .getCount()) > 0
     );
+  }
+
+  private getFindManyOption(
+    searchRoomDto: SearchRoomDto,
+    hotelId: string,
+  ): FindManyOptions<Room> {
+    const whereOptions: FindOptionsWhere<Room> = {
+      hotel: hotelId
+        ? {
+            id: hotelId,
+          }
+        : undefined,
+      name: searchRoomDto.name ? Like(`%${searchRoomDto.name}%`) : undefined,
+      price: between(searchRoomDto.priceFrom, searchRoomDto.priceTo),
+      area: between(searchRoomDto.areaFrom, searchRoomDto.areaTo),
+      currentAvailable: searchRoomDto.currentAvailable
+        ? MoreThanOrEqual(searchRoomDto.currentAvailable)
+        : undefined,
+      total: searchRoomDto.total,
+      rate: searchRoomDto.rate
+        ? MoreThanOrEqual(searchRoomDto.rate)
+        : undefined,
+      roomType: searchRoomDto.roomTypeId
+        ? {
+            id: searchRoomDto.roomTypeId,
+          }
+        : undefined,
+    };
+
+    return {
+      where: whereOptions,
+      ...getPaginationOption<Room>(
+        searchRoomDto.pageNumber,
+        searchRoomDto.pageSize,
+      ),
+    };
   }
 }
