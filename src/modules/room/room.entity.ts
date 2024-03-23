@@ -63,7 +63,9 @@ export class Room {
   })
   roomType: RoomType;
 
-  @ManyToOne(() => Hotel, (hotel) => hotel.rooms)
+  @ManyToOne(() => Hotel, (hotel) => hotel.rooms, {
+    eager: true,
+  })
   @JoinColumn({ name: 'hotelId' })
   hotel: Hotel;
 

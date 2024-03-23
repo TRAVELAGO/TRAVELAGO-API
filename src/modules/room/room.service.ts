@@ -26,7 +26,6 @@ export class RoomService {
       where: {
         id: roomId,
       },
-      relations: ['hotel'],
     });
 
     if (!existedRoom) {
@@ -37,10 +36,10 @@ export class RoomService {
   }
 
   async findAll(pageNumber?: number, pageSize?: number): Promise<Room[]> {
-    const findManyOption: FindManyOptions = {
-      relations: ['hotel'],
-      ...getPaginationOption(pageNumber, pageSize),
-    };
+    const findManyOption: FindManyOptions = getPaginationOption(
+      pageNumber,
+      pageSize,
+    );
 
     return await this.roomRepository.find(findManyOption);
   }
@@ -81,7 +80,7 @@ export class RoomService {
     userId: string,
     roomId: string,
     updateRoomDto: UpdateRoomDto,
-  ): Promise<void> {
+  ): Promise<Room> {
     const existedRoom = await this.roomRepository.findOne({
       where: {
         id: roomId,
@@ -109,9 +108,9 @@ export class RoomService {
       existedRoom.roomType = existedRoomType;
     }
 
-    Object.assign(existedRoom, updateRoomDto);
+    this.roomRepository.merge(existedRoom, updateRoomDto);
 
-    await this.roomRepository.save(existedRoom);
+    return this.roomRepository.save(existedRoom);
   }
 
   async delete(userId: string, roomId: string): Promise<void> {
