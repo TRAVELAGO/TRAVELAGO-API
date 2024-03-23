@@ -23,8 +23,8 @@ import { RolesGuard } from '@modules/auth/guards/roles.guard';
 import { Roles } from 'src/decorators/roles.decorator';
 import { RoleType } from '@constants/role-type';
 
-@ApiTags('Room')
-@Controller('room')
+@ApiTags('Rooms')
+@Controller('rooms')
 export class RoomController {
   constructor(private roomService: RoomService) {}
 
@@ -71,7 +71,7 @@ export class RoomController {
     @GetJwtPayload() user: JwtPayloadType,
     @Param('id') roomId: string,
     @Body() updateRoomDto: UpdateRoomDto,
-  ): Promise<void> {
+  ): Promise<Room> {
     return this.roomService.update(user.id, roomId, updateRoomDto);
   }
 

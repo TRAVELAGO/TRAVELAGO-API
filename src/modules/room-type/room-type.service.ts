@@ -37,7 +37,7 @@ export class RoomTypeService {
   async update(
     roomTypeId: string,
     updateRoomTypeDto: UpdateRoomTypeDto,
-  ): Promise<void> {
+  ): Promise<RoomType> {
     const existedRoomType = await this.roomTypeRepository.findOne({
       where: {
         id: roomTypeId,
@@ -48,7 +48,9 @@ export class RoomTypeService {
       throw new NotFoundException('Room type does not exist.');
     }
 
-    await this.roomTypeRepository.update(existedRoomType.id, updateRoomTypeDto);
+    this.roomTypeRepository.merge(existedRoomType, updateRoomTypeDto);
+
+    return this.roomTypeRepository.save(existedRoomType);
   }
 
   async delete(roomTypeId: string): Promise<void> {
