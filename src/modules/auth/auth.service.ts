@@ -75,12 +75,7 @@ export class AuthService {
 
       await queryRunner.commitTransaction();
 
-      return {
-        id: newUser.id,
-        email: newUser.email,
-        fullName: newUser.fullName,
-        role: newUser.role,
-      };
+      return newUser;
     } catch (error) {
       await queryRunner.rollbackTransaction();
       throw error;
@@ -112,10 +107,7 @@ export class AuthService {
       role: user.role,
     };
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { password, refreshToken, ...userDto } = user;
-
-    return { ...(await this.generateToken(jwtPayload)), user: userDto };
+    return { ...(await this.generateToken(jwtPayload)), user };
   }
 
   async refreshToken(payload: JwtPayloadType): Promise<Token> {

@@ -17,8 +17,8 @@ import { UpdateRoomTypeDto } from './dto/update-room-type.dto';
 import { RoomType } from './room-type.entity';
 import { JwtAuthGuard } from '@modules/auth/guards/jwt-auth.guard';
 
-@ApiTags('Room Type')
-@Controller('room-type')
+@ApiTags('Room Types')
+@Controller('room-types')
 export class RoomTypeController {
   constructor(private roomTypeService: RoomTypeService) {}
 
@@ -55,7 +55,7 @@ export class RoomTypeController {
   async update(
     @Param('id') roomTypeId: string,
     @Body() updateRoomTypeDto: UpdateRoomTypeDto,
-  ): Promise<void> {
+  ): Promise<RoomType> {
     return this.roomTypeService.update(roomTypeId, updateRoomTypeDto);
   }
 
