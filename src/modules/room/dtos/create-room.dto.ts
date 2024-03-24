@@ -15,7 +15,7 @@ export class CreateRoomDto {
   })
   @MaxLength(100)
   @IsNotEmpty()
-  name: string;
+  readonly name: string;
 
   @ApiProperty({
     minimum: 1,
@@ -24,19 +24,19 @@ export class CreateRoomDto {
   @IsNotEmpty()
   @IsNumber()
   @Min(1)
-  price: number;
+  readonly price: number;
 
   @ApiPropertyOptional({
     default: 150000,
   })
   @IsNumber()
   @IsOptional()
-  discount: number;
+  readonly discount: number;
 
   @ApiPropertyOptional()
   @IsArray()
   @IsOptional()
-  images: string[];
+  readonly images: string[];
 
   @ApiProperty({
     minimum: 1,
@@ -44,12 +44,12 @@ export class CreateRoomDto {
   })
   @IsNumber()
   @Min(1)
-  total: number;
+  readonly total: number;
 
   @ApiPropertyOptional()
   @IsString()
   @IsOptional()
-  description: string;
+  readonly description: string;
 
   @ApiPropertyOptional({
     minimum: 1,
@@ -58,14 +58,14 @@ export class CreateRoomDto {
   @IsNumber()
   @IsOptional()
   @Min(1)
-  area: number;
+  readonly area: number;
 
   @ApiPropertyOptional()
   @IsArray()
   @IsOptional()
-  roomAmenities: number[];
+  readonly roomAmenities: number[];
 
   @ApiProperty()
   @IsNotEmpty()
-  roomTypeId: string;
+  readonly roomTypeId: string;
 }

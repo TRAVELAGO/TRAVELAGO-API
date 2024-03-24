@@ -13,9 +13,9 @@ import { LoginDto } from './dtos/login.dto';
 import { User } from '@modules/user/user.entity';
 import { RegisterDto } from './dtos/register.dto';
 import { JwtService } from '@nestjs/jwt';
-import { RoleType } from '@constants/role-type';
 import { JwtPayloadType } from './strategies/types/jwt-payload.type';
 import { LoginResponse, Token } from './strategies/types/login.type';
+import { RoleType } from '@constants/role-type';
 
 @Injectable()
 export class AuthService {

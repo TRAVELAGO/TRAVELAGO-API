@@ -11,32 +11,38 @@ export class CreateRoomTypeDto {
   @ApiProperty()
   @IsString()
   @IsNotEmpty()
-  bedType1: string;
+  readonly bedType1: string;
 
   @ApiPropertyOptional()
   @IsString()
   @IsOptional()
-  bedType2?: string;
+  readonly bedType2?: string;
 
-  @ApiProperty()
+  @ApiProperty({
+    minimum: 1,
+    default: 1,
+  })
   @IsNumber()
   @IsNotEmpty()
   @Min(1)
-  numberBedType1: number;
+  readonly numberBedType1: number;
 
   @ApiPropertyOptional()
   @IsNumber()
   @IsOptional()
   @Min(1)
-  numberBedType2?: number;
+  readonly numberBedType2?: number;
 
-  @ApiProperty()
+  @ApiProperty({
+    minimum: 1,
+    default: 1,
+  })
   @IsNumber()
   @Min(1)
-  guestNumber: number;
+  readonly guestNumber: number;
 
   @ApiPropertyOptional()
   @IsString()
   @IsOptional()
-  description?: string;
+  readonly description?: string;
 }

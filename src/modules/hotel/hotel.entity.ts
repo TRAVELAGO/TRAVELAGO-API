@@ -1,4 +1,4 @@
-import { HotelStatus } from '@constants/index';
+import { HotelStatus } from '@constants/hotel-status';
 import { City } from '@modules/city/city.entity';
 import { Room } from '@modules/room/room.entity';
 import { User } from '@modules/user/user.entity';
