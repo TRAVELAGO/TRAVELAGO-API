@@ -9,5 +9,6 @@ import { JwtStrategy } from '@modules/auth/strategies/jwt.strategy';
   imports: [TypeOrmModule.forFeature([RoomType])],
   controllers: [RoomTypeController],
   providers: [RoomTypeService, JwtStrategy],
+  exports: [TypeOrmModule],
 })
 export class RoomTypeModule {}

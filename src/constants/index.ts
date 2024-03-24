@@ -4,3 +4,4 @@ export * from './hotel-status';
 export * from './payment-method';
 export * from './payment-status';
 export * from './booking-status';
+export * from './order';
