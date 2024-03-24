@@ -12,8 +12,8 @@ import { LoginDto } from './dtos/login.dto';
 import { User } from '@modules/user/user.entity';
 import { RegisterDto } from './dtos/register.dto';
 import { JwtRefreshGuard } from './guards/jwt-refresh.guard';
-import { GetJwtPayload } from 'src/decorators/get-jwt-payload.decorator';
 import { LoginResponse } from './strategies/types/login.type';
+import { GetJwtPayload } from '@decorators/get-jwt-payload.decorator';
 
 @ApiTags('Auth')
 @Controller('auth')

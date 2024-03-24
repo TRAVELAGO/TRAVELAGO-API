@@ -6,41 +6,41 @@ export class SearchRoomDto extends PageOptionsDto {
   @ApiPropertyOptional()
   @MaxLength(100)
   @IsOptional()
-  name: string;
+  readonly name: string;
 
   @ApiPropertyOptional({ minimum: 1 })
   @IsInt()
   @Min(1)
   @IsOptional()
-  total: number;
+  readonly total: number;
 
   @ApiPropertyOptional()
   @IsOptional()
-  roomTypeId: string;
+  readonly roomTypeId: string;
 
   @ApiPropertyOptional()
   @IsOptional()
-  priceFrom?: number;
+  readonly priceFrom?: number;
 
   @ApiPropertyOptional({ minimum: 1 })
   @Min(1)
   @IsOptional()
-  priceTo?: number;
+  readonly priceTo?: number;
 
   @ApiPropertyOptional()
   @IsOptional()
-  areaFrom?: number;
+  readonly areaFrom?: number;
 
   @ApiPropertyOptional({ minimum: 1 })
   @Min(1)
   @IsOptional()
-  areaTo?: number;
+  readonly areaTo?: number;
 
   @ApiPropertyOptional()
   @IsOptional()
-  currentAvailable?: number;
+  readonly currentAvailable?: number;
 
   @ApiPropertyOptional()
   @IsOptional()
-  rate?: number;
+  readonly rate?: number;
 }

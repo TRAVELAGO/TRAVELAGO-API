@@ -17,12 +17,12 @@ import { RoomService } from './room.service';
 import { UpdateRoomDto } from './dtos/update-room.dto';
 import { Room } from './room.entity';
 import { JwtAuthGuard } from '@modules/auth/guards/jwt-auth.guard';
-import { GetJwtPayload } from 'src/decorators/get-jwt-payload.decorator';
 import { JwtPayloadType } from '@modules/auth/strategies/types/jwt-payload.type';
 import { RolesGuard } from '@modules/auth/guards/roles.guard';
-import { Roles } from 'src/decorators/roles.decorator';
-import { RoleType } from '@constants/role-type';
 import { SearchRoomDto } from './dtos/seach-room.dto';
+import { RoleType } from '@constants/role-type';
+import { GetJwtPayload } from '@decorators/get-jwt-payload.decorator';
+import { Roles } from '@decorators/roles.decorator';
 import { PageDto } from 'src/common/dtos/page.dto';
 
 @ApiTags('Rooms')
