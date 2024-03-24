@@ -19,6 +19,8 @@ import { RoomType } from '@modules/room-type/room-type.entity';
 import { getPaginationOption } from 'src/utils/pagination';
 import { SearchRoomDto } from './dtos/seach-room.dto';
 import { between } from 'src/utils/find-option';
+import { PageDto } from 'src/common/dtos/page.dto';
+import { PageMetaDto } from 'src/common/dtos/page-meta.dto';
 
 @Injectable()
 export class RoomService {
@@ -46,13 +48,30 @@ export class RoomService {
   async search(
     searchRoomDto: SearchRoomDto,
     hotelId?: string,
-  ): Promise<Room[]> {
+  ): Promise<PageDto<Room>> {
     const findManyOption: FindManyOptions<Room> = this.getFindManyOption(
       searchRoomDto,
       hotelId,
     );
 
-    return await this.roomRepository.find(findManyOption);
+    const itemCount = await this.roomRepository.count(findManyOption);
+
+    const rooms = await this.roomRepository.find({
+      ...findManyOption,
+      ...getPaginationOption<Room>(
+        searchRoomDto.pageNumber,
+        searchRoomDto.pageSize,
+      ),
+    });
+
+    // create metadata
+    const pageMetaDto = new PageMetaDto({
+      itemCount,
+      pageOptionsDto: searchRoomDto,
+    });
+
+    // add data to PageDto
+    return new PageDto(rooms, pageMetaDto);
   }
 
   async create(
@@ -184,10 +203,9 @@ export class RoomService {
 
     return {
       where: whereOptions,
-      ...getPaginationOption<Room>(
-        searchRoomDto.pageNumber,
-        searchRoomDto.pageSize,
-      ),
+      order: {
+        createdAt: searchRoomDto.order,
+      },
     };
   }
 }

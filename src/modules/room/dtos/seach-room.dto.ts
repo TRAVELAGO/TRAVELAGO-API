@@ -1,32 +1,29 @@
-import { ApiPropertyOptional, PartialType, OmitType } from '@nestjs/swagger';
-import { CreateRoomDto } from './create-room.dto';
-import { IsNumber, IsOptional } from 'class-validator';
+import { ApiPropertyOptional } from '@nestjs/swagger';
+import { IsInt, IsOptional, MaxLength, Min } from 'class-validator';
+import { PageOptionsDto } from 'src/common/dtos/page-option.dto';
 
-export class SearchRoomDto extends PartialType(
-  OmitType(CreateRoomDto, [
-    'description',
-    'images',
-    'price',
-    'discount',
-    'area',
-    'roomAmenities',
-  ]),
-) {
-  @ApiPropertyOptional({ name: 'page-size' })
-  @IsNumber()
+export class SearchRoomDto extends PageOptionsDto {
+  @ApiPropertyOptional()
+  @MaxLength(100)
   @IsOptional()
-  pageSize?: number;
+  name: string;
 
-  @ApiPropertyOptional({ name: 'page-number' })
-  @IsNumber()
+  @ApiPropertyOptional({ minimum: 1 })
+  @IsInt()
+  @Min(1)
   @IsOptional()
-  pageNumber?: number;
+  total: number;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  roomTypeId: string;
 
   @ApiPropertyOptional()
   @IsOptional()
   priceFrom?: number;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ minimum: 1 })
+  @Min(1)
   @IsOptional()
   priceTo?: number;
 
@@ -34,7 +31,8 @@ export class SearchRoomDto extends PartialType(
   @IsOptional()
   areaFrom?: number;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ minimum: 1 })
+  @Min(1)
   @IsOptional()
   areaTo?: number;
 
