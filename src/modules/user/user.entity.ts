@@ -1,4 +1,5 @@
-import { RoleType, UserStatus } from '@constants/index';
+import { RoleType } from '@constants/role-type';
+import { UserStatus } from '@constants/user-status';
 import { Exclude } from 'class-transformer';
 import {
   Entity,

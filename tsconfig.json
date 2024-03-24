@@ -21,9 +21,11 @@
       "@modules/*": ["src/modules/*"],
       "@configs/*": ["src/configs/*"],
       "@repositories/*": ["src/repositories/*"],
-      "@guards/*": ["src/guards/*"],
-      "@constants/*": ["src/constants/*"],
+      "@guards/*": ["src/common/guards/*"],
+      "@constants/*": ["src/common/constants/*"],
       "@database/*": ["src/database/*"],
+      "@interfaces/*": ["src/common/interfaces/*"],
+      "@decorators/*": ["src/common/decorators/*"],
     }
   }
 }

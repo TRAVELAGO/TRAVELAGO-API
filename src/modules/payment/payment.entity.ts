@@ -1,4 +1,5 @@
-import { PaymentMethod, PaymentStatus } from '@constants/index';
+import { PaymentMethod } from '@constants/payment-method';
+import { PaymentStatus } from '@constants/payment-status';
 import { Booking } from '@modules/booking/booking.entity';
 import { User } from '@modules/user/user.entity';
 import {
