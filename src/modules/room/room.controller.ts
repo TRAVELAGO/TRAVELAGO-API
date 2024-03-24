@@ -23,6 +23,7 @@ import { RolesGuard } from '@modules/auth/guards/roles.guard';
 import { Roles } from 'src/decorators/roles.decorator';
 import { RoleType } from '@constants/role-type';
 import { SearchRoomDto } from './dtos/seach-room.dto';
+import { PageDto } from 'src/common/dtos/page.dto';
 
 @ApiTags('Rooms')
 @Controller()
@@ -40,7 +41,7 @@ export class RoomController {
   @ApiResponse({ status: 200, description: 'Successfully.' })
   @ApiQuery({ name: 'page-number', required: false, type: Number })
   @ApiQuery({ name: 'page-size', required: false, type: Number })
-  async search(@Query() searchRoomDto: SearchRoomDto): Promise<Room[]> {
+  async search(@Query() searchRoomDto: SearchRoomDto): Promise<PageDto<Room>> {
     return this.roomService.search(searchRoomDto);
   }
 
@@ -49,7 +50,7 @@ export class RoomController {
   async searchHotelRoom(
     @Param('hotelId') hotelId: string,
     @Query() searchRoomDto: SearchRoomDto,
-  ): Promise<Room[]> {
+  ): Promise<PageDto<Room>> {
     return this.roomService.search(searchRoomDto, hotelId);
   }
 

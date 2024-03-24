@@ -10,17 +10,25 @@ import {
 } from 'class-validator';
 
 export class CreateRoomDto {
-  @ApiProperty()
+  @ApiProperty({
+    maxLength: 100,
+  })
   @MaxLength(100)
   @IsNotEmpty()
   name: string;
 
-  @ApiProperty()
+  @ApiProperty({
+    minimum: 1,
+    default: 1000000,
+  })
   @IsNotEmpty()
   @IsNumber()
+  @Min(1)
   price: number;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({
+    default: 150000,
+  })
   @IsNumber()
   @IsOptional()
   discount: number;
@@ -30,7 +38,10 @@ export class CreateRoomDto {
   @IsOptional()
   images: string[];
 
-  @ApiProperty()
+  @ApiProperty({
+    minimum: 1,
+    default: 3,
+  })
   @IsNumber()
   @Min(1)
   total: number;
@@ -40,7 +51,10 @@ export class CreateRoomDto {
   @IsOptional()
   description: string;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({
+    minimum: 1,
+    default: 30,
+  })
   @IsNumber()
   @IsOptional()
   @Min(1)
