@@ -43,4 +43,8 @@ export class SearchRoomDto extends PageOptionsDto {
   @ApiPropertyOptional()
   @IsOptional()
   readonly rate?: number;
+
+  @ApiPropertyOptional({ default: 'amenityId1,amenityId2' })
+  @IsOptional()
+  readonly roomAmenities?: string;
 }

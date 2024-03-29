@@ -2,6 +2,7 @@ import { UpdateRoomDto } from './dtos/update-room.dto';
 import { Hotel } from '@modules/hotel/hotel.entity';
 import {
   ForbiddenException,
+  Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -16,11 +17,14 @@ import {
 import { Room } from './room.entity';
 import { CreateRoomDto } from './dtos/create-room.dto';
 import { RoomType } from '@modules/room-type/room-type.entity';
-import { getPaginationOption } from 'src/utils/pagination';
+import { getOrderOption, getPaginationOption } from 'src/utils/pagination';
 import { SearchRoomDto } from './dtos/seach-room.dto';
-import { between } from 'src/utils/find-option';
+import { between, findInJsonArray } from 'src/utils/find-option';
 import { PageDto } from 'src/common/dtos/page.dto';
 import { PageMetaDto } from 'src/common/dtos/page-meta.dto';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { Cache } from 'cache-manager';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class RoomService {
@@ -29,6 +33,8 @@ export class RoomService {
     @InjectRepository(RoomType)
     private roomTypeRepository: Repository<RoomType>,
     @InjectRepository(Hotel) private hotelRepository: Repository<Hotel>,
+    @Inject(CACHE_MANAGER) private cacheManager: Cache,
+    private configService: ConfigService,
   ) {}
 
   async find(roomId: string): Promise<Room> {
@@ -54,14 +60,17 @@ export class RoomService {
       hotelId,
     );
 
-    const itemCount = await this.roomRepository.count(findManyOption);
-
-    const rooms = await this.roomRepository.find({
+    const [rooms, itemCount] = await this.roomRepository.findAndCount({
       ...findManyOption,
       ...getPaginationOption<Room>(
         searchRoomDto.pageNumber,
         searchRoomDto.pageSize,
       ),
+      ...(await getOrderOption<Room>(
+        Room,
+        searchRoomDto.order,
+        this.cacheManager,
+      )),
     });
 
     // create metadata
@@ -199,13 +208,14 @@ export class RoomService {
             id: searchRoomDto.roomTypeId,
           }
         : undefined,
+      roomAmenities: findInJsonArray(
+        searchRoomDto.roomAmenities,
+        this.configService.get<string>('DB_TYPE'),
+      ),
     };
 
     return {
       where: whereOptions,
-      order: {
-        createdAt: searchRoomDto.order,
-      },
     };
   }
 }
