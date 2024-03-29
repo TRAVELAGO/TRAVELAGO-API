@@ -11,7 +11,7 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { CreateRoomDto } from './dtos/create-room.dto';
 import { RoomService } from './room.service';
 import { UpdateRoomDto } from './dtos/update-room.dto';
@@ -39,8 +39,6 @@ export class RoomController {
 
   @Get('rooms')
   @ApiResponse({ status: 200, description: 'Successfully.' })
-  @ApiQuery({ name: 'page-number', required: false, type: Number })
-  @ApiQuery({ name: 'page-size', required: false, type: Number })
   async search(@Query() searchRoomDto: SearchRoomDto): Promise<PageDto<Room>> {
     return this.roomService.search(searchRoomDto);
   }
