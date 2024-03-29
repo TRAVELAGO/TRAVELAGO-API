@@ -5,6 +5,9 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { dataSourceOptions } from '@database/database-option';
 import { AuthModule } from '@modules/auth/auth.module';
 import { HotelModule } from './modules/hotel/hotel.module';
+import { RoomModule } from '@modules/room/room.module';
+import { RoomTypeModule } from '@modules/room-type/room-type.module';
+import { PassportModule } from '@nestjs/passport';
 
 @Module({
   imports: [
@@ -15,9 +18,12 @@ import { HotelModule } from './modules/hotel/hotel.module';
       expandVariables: true,
     }),
     TypeOrmModule.forRoot(dataSourceOptions),
+    PassportModule,
     AuthModule,
     UserModule,
     HotelModule,
+    RoomModule,
+    RoomTypeModule,
   ],
   providers: [],
 })

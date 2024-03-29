@@ -1,5 +1,4 @@
-import { RoleType } from '@constants/role-type';
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
   IsEmail,
   IsEnum,
@@ -11,46 +10,55 @@ import {
   MaxLength,
   MinLength,
 } from 'class-validator';
-import { Match } from 'src/decorators/match-password.decorator';
+import { Match } from '@decorators/match-password.decorator';
+import { RoleType } from '@constants/role-type';
 
 export class RegisterDto {
-  @ApiProperty()
+  @ApiProperty({
+    default: 'test@gmail.com',
+  })
   @IsNotEmpty()
   @IsEmail()
-  email: string;
+  readonly email: string;
 
-  @ApiProperty()
+  @ApiProperty({
+    default: 'Secret!@2121',
+  })
   @IsString()
   @MinLength(6)
   @MaxLength(20)
   @Matches(/((?=.*\d)|(?=.*\W+))(?![.\n])(?=.*[A-Z])(?=.*[a-z]).*$/, {
     message: 'Password too weak!',
   })
-  password: string;
+  readonly password: string;
 
-  @ApiProperty()
+  @ApiProperty({
+    default: 'Secret!@2121',
+  })
   @IsString()
   @MinLength(6)
   @MaxLength(20)
   @Match('password', { message: 'Re-enter the password does not match!' })
-  passwordConfirm: string;
+  readonly passwordConfirm: string;
 
-  @ApiProperty()
+  @ApiProperty({
+    default: '0987654321',
+  })
   @IsNotEmpty()
   @IsPhoneNumber('VN', {
     message: 'Please enter the correct Vietnamese phone number',
   })
-  phoneNumber: string;
+  readonly phoneNumber: string;
 
   @ApiProperty()
   @IsNotEmpty()
-  fullName: string;
+  readonly fullName: string;
 
   @ApiProperty({ default: RoleType.USER })
   @IsEnum(RoleType)
-  role: RoleType;
+  readonly role: RoleType;
 
-  @ApiProperty()
+  @ApiPropertyOptional()
   @IsOptional()
-  hotelName?: string;
+  readonly hotelName?: string;
 }
