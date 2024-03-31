@@ -888,10 +888,10 @@
     webpack "5.90.1"
     webpack-node-externals "3.0.0"
 
-"@nestjs/common@^10.0.0":
-  version "10.3.3"
-  resolved "https://registry.npmjs.org/@nestjs/common/-/common-10.3.3.tgz"
-  integrity sha512-LAkTe8/CF0uNWM0ecuDwUNTHCi1lVSITmmR4FQ6Ftz1E7ujQCnJ5pMRzd8JRN14vdBkxZZ8VbVF0BDUKoKNxMQ==
+"@nestjs/common@^10.3.7":
+  version "10.3.7"
+  resolved "https://registry.yarnpkg.com/@nestjs/common/-/common-10.3.7.tgz#38ab5ff92277cf1f26f4749c264524e76962cfff"
+  integrity sha512-gKFtFzcJznrwsRYjtNZoPAvSOPYdNgxbTYoAyLTpoy393cIKgLmJTHu6ReH8/qIB9AaZLdGaFLkx98W/tFWFUw==
   dependencies:
     uid "2.0.2"
     iterare "1.2.1"
@@ -954,10 +954,10 @@
     jsonc-parser "3.2.1"
     pluralize "8.0.0"
 
-"@nestjs/swagger@^7.3.0":
-  version "7.3.0"
-  resolved "https://registry.npmjs.org/@nestjs/swagger/-/swagger-7.3.0.tgz"
-  integrity sha512-zLkfKZ+ioYsIZ3dfv7Bj8YHnZMNAGWFUmx2ZDuLp/fBE4P8BSjB7hldzDueFXsmwaPL90v7lgyd82P+s7KME1Q==
+"@nestjs/swagger@^7.3.1":
+  version "7.3.1"
+  resolved "https://registry.yarnpkg.com/@nestjs/swagger/-/swagger-7.3.1.tgz#353fdd5bd6f23564505117b1c82d7decc145e8fe"
+  integrity sha512-LUC4mr+5oAleEC/a2j8pNRh1S5xhKXJ1Gal5ZdRjt9XebQgbngXCdW7JTA9WOEcwGtFZN9EnKYdquzH971LZfw==
   dependencies:
     "@microsoft/tsdoc" "^0.14.2"
     "@nestjs/mapped-types" "2.0.5"

@@ -1,5 +1,4 @@
 import { HotelStatus } from '@constants/hotel-status';
-import { City } from '@modules/city/city.entity';
 import { ApiProperty } from '@nestjs/swagger';
 import { IsNotEmpty } from 'class-validator';
 

@@ -6,9 +6,29 @@ import { HotelDto } from './dtos/hotelDto';
 
 @Injectable()
 export class HotelService {
+
   constructor(
     @InjectRepository(Hotel) private hotelRepository: Repository<Hotel>,
   ) {}
+
+  async findAll(): Promise<Hotel[]> {
+    return this.hotelRepository.find();
+  }
+
+  async findOne(id: string): Promise<Hotel> {
+    return this.hotelRepository.findOne({
+      where: { id: id },
+    });
+  }
+
+  async update(id: string, hotelData: Partial<Hotel>): Promise<Hotel> {
+    await this.hotelRepository.update(id, hotelData);
+    return this.findOne(id);
+  }
+
+  async remove(id: string): Promise<void> {
+    await this.hotelRepository.delete(id);
+  }
 
   async createHotel(hotelDto: HotelDto): Promise<Hotel> {
     const hotel = await this.hotelRepository.findOne({
