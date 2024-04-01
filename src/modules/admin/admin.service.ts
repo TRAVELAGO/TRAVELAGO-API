@@ -36,7 +36,7 @@ export class AdminService {
   async getAllUsers() {
     return this.userRepository.findBy({
       role: Not(RoleType.ADMIN),
-  });
+    });
   }
 
   async getTotalHotels(): Promise<number> {
