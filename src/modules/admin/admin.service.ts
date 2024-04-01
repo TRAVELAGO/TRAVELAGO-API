@@ -1,6 +1,7 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, Not } from 'typeorm';
+import { RoleType } from '@constants/role-type';
 import { User } from '@modules/user/user.entity';
 import { Hotel } from '@modules/hotel/hotel.entity';
 import { Booking } from '@modules/booking/booking.entity';
@@ -10,6 +11,8 @@ import { LoginDto } from './dtos/login.dto';
 export class AdminService {
   constructor(
     @InjectRepository(User)
+    @InjectRepository(Hotel)
+    @InjectRepository(Booking)
     private readonly userRepository: Repository<User>,
     private readonly hotelRepository: Repository<Hotel>,
     private readonly bookingRepository: Repository<Booking>,
@@ -23,7 +26,7 @@ export class AdminService {
     if (!admin || admin.password !== password) {
       throw new UnauthorizedException('Invalid email or password');
     }
-    if (admin.role != 'ADMIN') {
+    if (admin.role != RoleType.ADMIN) {
       throw new UnauthorizedException('Access denied');
     }
 
@@ -31,7 +34,9 @@ export class AdminService {
   }
 
   async getAllUsers() {
-    return this.userRepository.find();
+    return this.userRepository.findBy({
+      role: Not(RoleType.ADMIN),
+  });
   }
 
   async getTotalHotels(): Promise<number> {
