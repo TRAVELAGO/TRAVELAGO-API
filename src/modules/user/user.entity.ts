@@ -1,4 +1,6 @@
-import { RoleType, UserStatus } from '@constants/index';
+import { RoleType } from '@constants/role-type';
+import { UserStatus } from '@constants/user-status';
+import { Exclude } from 'class-transformer';
 import {
   Entity,
   Column,
@@ -9,13 +11,14 @@ import {
 
 @Entity()
 export class User {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   @Column({ unique: true })
   email: string;
 
   @Column({ length: 100 })
+  @Exclude({ toPlainOnly: true })
   password: string;
 
   @Column({ length: 100 })
@@ -37,6 +40,7 @@ export class User {
   status: UserStatus;
 
   @Column({ nullable: true })
+  @Exclude({ toPlainOnly: true })
   refreshToken: string;
 
   @CreateDateColumn({ type: 'timestamp' })

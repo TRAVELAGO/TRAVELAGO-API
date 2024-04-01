@@ -1,4 +1,4 @@
-import { HotelStatus } from '@constants/index';
+import { HotelStatus } from '@constants/hotel-status';
 import { City } from '@modules/city/city.entity';
 import { Room } from '@modules/room/room.entity';
 import { User } from '@modules/user/user.entity';
@@ -11,18 +11,21 @@ import {
   ManyToOne,
   OneToMany,
   Index,
+  JoinColumn,
 } from 'typeorm';
 
 @Entity()
 export class Hotel {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   @Column({ length: 120 })
   @Index({ fulltext: true })
   name: string;
 
-  @Column('simple-array')
+  @Column('json', {
+    nullable: true,
+  })
   images: string[];
 
   @Column({ type: 'decimal', precision: 2, scale: 1, nullable: true })
@@ -50,6 +53,7 @@ export class Hotel {
   updatedAt: Date;
 
   @ManyToOne(() => User)
+  @JoinColumn({ name: 'userId' })
   user: User;
 
   @ManyToOne(() => City, (city) => city.hotels)

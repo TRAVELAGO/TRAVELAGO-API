@@ -1,4 +1,4 @@
-import { BookingStatus } from '@constants/index';
+import { BookingStatus } from '@constants/booking-status';
 import { Hotel } from '@modules/hotel/hotel.entity';
 import { Payment } from '@modules/payment/payment.entity';
 import { Room } from '@modules/room/room.entity';
@@ -15,8 +15,8 @@ import {
 
 @Entity()
 export class Booking {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   @Column({ default: BookingStatus.PENDING })
   status: BookingStatus;

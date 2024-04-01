@@ -1,4 +1,5 @@
-import { PaymentMethod, PaymentStatus } from '@constants/index';
+import { PaymentMethod } from '@constants/payment-method';
+import { PaymentStatus } from '@constants/payment-status';
 import { Booking } from '@modules/booking/booking.entity';
 import { User } from '@modules/user/user.entity';
 import {
@@ -9,12 +10,13 @@ import {
   UpdateDateColumn,
   ManyToOne,
   OneToOne,
+  JoinTable,
 } from 'typeorm';
 
 @Entity()
 export class Payment {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   @Column({ type: 'decimal', precision: 10, scale: 2 })
   amount: number;
@@ -38,5 +40,6 @@ export class Payment {
   user: User;
 
   @OneToOne(() => Booking, (booking) => booking.payment)
+  @JoinTable()
   booking: Booking;
 }
