@@ -1,0 +1,77 @@
+services:
+  app:
+    build: .
+    container_name: travelago-postgres
+    restart: always
+    env_file:
+      '.env'
+    environment:
+      - DB_TYPE=postgres
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - PORT=8987
+      - NODE_ENV=production
+    ports:
+      - '8987:8987'
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - travelago-net
+  postgres:
+    image: postgres:latest
+    container_name: postgresdb
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_DB: ${DB_DATABASE}
+      TZ: 'GMT'
+      PGTZ: 'GMT'
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres:/data/postgres
+      - ./init-data.sh:/docker-entrypoint-initdb.d/init-data.sh
+    env_file:
+      - .env
+    networks:
+      - travelago-net
+  adminer:
+    image: adminer
+    restart: always
+    environment:
+      - ADMINER_DEFAULT_SERVER=postgres
+    ports:
+      - 8080:8080
+  # pgadmin:
+  #   image: dpage/pgadmin4
+  #   container_name: pgadmin
+  #   restart: always
+  #   environment:
+  #     - PGADMIN_DEFAULT_EMAIL=pgadmin@gmail.com
+  #     - PGADMIN_DEFAULT_PASSWORD=Secret123
+  #   ports:
+  #     - 8080:80
+  #   volumes:
+  #     - /data/pgadmin:/root/.pgadmin
+  #   networks:
+  #     - travelago-net
+  #   depends_on:
+  #     - postgres
+  redis:
+    image: redis:latest
+    container_name: redisdb
+    restart: always
+    networks:
+      - travelago-net
+
+volumes:
+  postgres:
+    driver: local
+     
+networks:
+  travelago-net:
+    driver: local
