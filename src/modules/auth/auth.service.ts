@@ -63,16 +63,6 @@ export class AuthService {
       });
 
       await queryRunner.manager.save(newUser);
-
-      if (newUser.role === RoleType.HOTEL) {
-        const newHotel = this.hotelRepository.create({
-          user: newUser,
-          name: registerDto?.hotelName,
-          images: [],
-        });
-        await queryRunner.manager.save(newHotel);
-      }
-
       await queryRunner.commitTransaction();
 
       return newUser;
