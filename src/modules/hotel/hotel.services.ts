@@ -6,7 +6,6 @@ import { HotelDto } from './dtos/hotelDto';
 
 @Injectable()
 export class HotelService {
-
   constructor(
     @InjectRepository(Hotel) private hotelRepository: Repository<Hotel>,
   ) {}

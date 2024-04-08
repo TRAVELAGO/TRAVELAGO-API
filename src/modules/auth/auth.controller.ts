@@ -2,14 +2,19 @@ import {
   Body,
   Controller,
   Post,
+  UseGuards,
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { LoginDto } from './dtos/login.dto';
 import { User } from '@modules/user/user.entity';
 import { RegisterDto } from './dtos/register.dto';
+import { JwtRefreshGuard } from './guards/jwt-refresh.guard';
+import { LoginResponse } from './strategies/types/login.type';
+import { GetJwtPayload } from '@decorators/get-jwt-payload.decorator';
+
 @ApiTags('Auth')
 @Controller('auth')
 export class AuthController {
@@ -22,15 +27,14 @@ export class AuthController {
 
   @Post('login')
   @UsePipes(ValidationPipe)
-  async login(@Body() loginDto: LoginDto): Promise<User> {
-    console.log('login API');
-    console.log(loginDto);
+  async login(@Body() loginDto: LoginDto): Promise<LoginResponse> {
     return this.authService.login(loginDto);
   }
 
   @Post('refresh-token')
-  async refreshToken(@Body() { refreshToken }): Promise<any> {
-    console.log('refresh token api');
-    return this.authService.refreshToken(refreshToken);
+  @ApiBearerAuth()
+  @UseGuards(JwtRefreshGuard)
+  async refreshToken(@GetJwtPayload() user): Promise<any> {
+    return this.authService.refreshToken(user);
   }
 }

@@ -1,3 +1,4 @@
+import { ConfigService } from '@nestjs/config';
 import { Hotel } from '@modules/hotel/hotel.entity';
 import {
   BadRequestException,
@@ -12,6 +13,8 @@ import { LoginDto } from './dtos/login.dto';
 import { User } from '@modules/user/user.entity';
 import { RegisterDto } from './dtos/register.dto';
 import { JwtService } from '@nestjs/jwt';
+import { JwtPayloadType } from './strategies/types/jwt-payload.type';
+import { LoginResponse, Token } from './strategies/types/login.type';
 import { RoleType } from '@constants/role-type';
 
 @Injectable()
@@ -21,9 +24,14 @@ export class AuthService {
     @InjectRepository(Hotel) private hotelRepository: Repository<Hotel>,
     private dataSource: DataSource,
     private jwtService: JwtService,
+    private configService: ConfigService,
   ) {}
 
   async register(registerDto: RegisterDto): Promise<Partial<User>> {
+    if (registerDto.role === RoleType.ADMIN) {
+      throw new BadRequestException('Unable to register for admin role.');
+    }
+
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
@@ -67,12 +75,7 @@ export class AuthService {
 
       await queryRunner.commitTransaction();
 
-      return {
-        id: newUser.id,
-        email: newUser.email,
-        fullName: newUser.fullName,
-        role: newUser.role,
-      };
+      return newUser;
     } catch (error) {
       await queryRunner.rollbackTransaction();
       throw error;
@@ -81,7 +84,7 @@ export class AuthService {
     }
   }
 
-  async login(loginDto: LoginDto): Promise<any> {
+  async login(loginDto: LoginDto): Promise<LoginResponse> {
     const user = await this.userRepository.findOne({
       where: { email: loginDto.email },
     });
@@ -98,47 +101,47 @@ export class AuthService {
       );
     }
 
-    const payload = { id: user.id, email: user.email };
-    return this.generateToken(payload);
+    const jwtPayload: JwtPayloadType = {
+      id: user.id,
+      email: user.email,
+      role: user.role,
+    };
+
+    return { ...(await this.generateToken(jwtPayload)), user };
   }
 
-  async refreshToken(refreshToken: string): Promise<any> {
-    try {
-      const verify = await this.jwtService.verifyAsync(refreshToken, {
-        secret: '1234567',
-      });
-      console.log(verify);
-      const checkExistToken = await this.userRepository.findOneBy({
-        email: verify.email,
+  async refreshToken(payload: JwtPayloadType): Promise<Token> {
+    return this.generateToken({
+      id: payload.id,
+      email: payload.email,
+      role: payload.role,
+    });
+  }
+
+  async checkRefreshToken(
+    userId: string,
+    refreshToken: string,
+  ): Promise<boolean> {
+    return this.userRepository.exists({
+      where: {
+        id: userId,
         refreshToken,
-      });
-      if (checkExistToken) {
-        return this.generateToken({ id: verify.id, email: verify.email });
-      } else {
-        throw new HttpException(
-          'Refresh token is not valid.',
-          HttpStatus.BAD_REQUEST,
-        );
-      }
-    } catch (error) {
-      throw new HttpException(
-        'Refresh token is not valid.',
-        HttpStatus.BAD_REQUEST,
-      );
-    }
+      },
+    });
   }
 
-  async generateToken(payload: { id: string; email: string }) {
-    const accessToken = await this.jwtService.signAsync(payload);
+  async generateToken(payload: JwtPayloadType): Promise<Token> {
+    const accessToken = await this.jwtService.signAsync(payload, {
+      expiresIn: '1h',
+    });
     const refreshToken = await this.jwtService.signAsync(payload, {
-      secret: '1234567',
+      secret: this.configService.get<string>('JWT_SECRET_RT_KEY'),
       expiresIn: '1d',
     });
 
-    await this.userRepository.update(
-      { email: payload.email },
-      { refreshToken: refreshToken },
-    );
+    await this.userRepository.update(payload.id, {
+      refreshToken: refreshToken,
+    });
     return { accessToken, refreshToken };
   }
 

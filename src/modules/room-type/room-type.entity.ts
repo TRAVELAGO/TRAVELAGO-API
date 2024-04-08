@@ -19,13 +19,13 @@ export class RoomType {
   @Column({ length: 120, nullable: true })
   bedType2: string;
 
-  @Column({ type: 'tinyint' })
+  @Column({ type: 'int' })
   numberBedType1: number;
 
-  @Column({ nullable: true, type: 'tinyint' })
+  @Column({ nullable: true, type: 'int' })
   numberBedType2: number;
 
-  @Column({ type: 'tinyint' })
+  @Column({ type: 'int' })
   guestNumber: number;
 
   @Column()

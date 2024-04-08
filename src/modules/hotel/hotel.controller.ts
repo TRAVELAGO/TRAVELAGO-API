@@ -1,4 +1,12 @@
-import { Controller, Post, Body, Get, Param, Put , Delete} from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  Get,
+  Param,
+  Put,
+  Delete,
+} from '@nestjs/common';
 import { HotelService } from './hotel.services';
 import { Hotel } from '@modules/hotel/hotel.entity';
 import { ApiTags } from '@nestjs/swagger';
@@ -31,7 +39,6 @@ export class HotelController {
   remove(@Param('id') id: string): Promise<void> {
     return this.hotelService.remove(id);
   }
-
 
   @Post('createHotel')
   createHotel(@Body() hotelDto: HotelDto): Promise<Hotel> {

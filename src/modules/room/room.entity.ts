@@ -10,6 +10,7 @@ import {
   UpdateDateColumn,
   ManyToOne,
   OneToMany,
+  JoinColumn,
 } from 'typeorm';
 
 @Entity()
@@ -57,10 +58,15 @@ export class Room {
   @UpdateDateColumn({ type: 'timestamp' })
   updatedAt: Date;
 
-  @ManyToOne(() => RoomType, (roomType) => roomType.rooms)
+  @ManyToOne(() => RoomType, (roomType) => roomType.rooms, {
+    eager: true,
+  })
   roomType: RoomType;
 
-  @ManyToOne(() => Hotel, (hotel) => hotel.rooms)
+  @ManyToOne(() => Hotel, (hotel) => hotel.rooms, {
+    eager: true,
+  })
+  @JoinColumn({ name: 'hotelId' })
   hotel: Hotel;
 
   @OneToMany(() => Feedback, (feedback) => feedback.room)
