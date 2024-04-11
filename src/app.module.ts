@@ -11,6 +11,7 @@ import { PassportModule } from '@nestjs/passport';
 import { CacheModule } from '@nestjs/cache-manager';
 import * as redisStore from 'cache-manager-redis-store';
 import { ClearCacheService } from './clear-cache.service';
+import { FilesModule } from './modules/files/files.module';
 
 @Module({
   imports: [
@@ -34,6 +35,7 @@ import { ClearCacheService } from './clear-cache.service';
     HotelModule,
     RoomModule,
     RoomTypeModule,
+    FilesModule,
   ],
   providers: [ClearCacheService],
 })

@@ -1,7 +1,9 @@
+import { FileObject } from '../files/types/file-object';
 import { Booking } from '@modules/booking/booking.entity';
 import { Feedback } from '@modules/feedback/feedback.entity';
 import { Hotel } from '@modules/hotel/hotel.entity';
 import { RoomType } from '@modules/room-type/room-type.entity';
+import { formatFileObjects, getFileObjects } from 'src/utils/files';
 import {
   Entity,
   Column,
@@ -29,8 +31,16 @@ export class Room {
 
   @Column('json', {
     nullable: true,
+    transformer: {
+      to(value: FileObject[]): string[] {
+        return formatFileObjects(value);
+      },
+      from(value: string[]): FileObject[] {
+        return getFileObjects(value);
+      },
+    },
   })
-  images: string[];
+  images: FileObject[];
 
   @Column()
   currentAvailable: number;
