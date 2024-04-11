@@ -7,6 +7,7 @@ import { AuthModule } from '@modules/auth/auth.module';
 import { HotelModule } from './modules/hotel/hotel.module';
 import { RoomModule } from '@modules/room/room.module';
 import { RoomTypeModule } from '@modules/room-type/room-type.module';
+import { AdminModule } from '@modules/admin/admin.module';
 import { PassportModule } from '@nestjs/passport';
 import { CacheModule } from '@nestjs/cache-manager';
 import * as redisStore from 'cache-manager-redis-store';
@@ -34,6 +35,7 @@ import { ClearCacheService } from './clear-cache.service';
     HotelModule,
     RoomModule,
     RoomTypeModule,
+    AdminModule,
   ],
   providers: [ClearCacheService],
 })
