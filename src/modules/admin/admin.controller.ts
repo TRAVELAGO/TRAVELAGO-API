@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Get } from '@nestjs/common';
+import { Controller, Post, Body, Get, Param } from '@nestjs/common';
 import { AdminService } from './admin.service';
 import { LoginDto } from './dtos/login.dto';
 
@@ -16,13 +16,37 @@ export class AdminController {
     return this.adminService.getAllUsers();
   }
 
+  @Post('users/:userId/status')
+  async changeUserStatus(
+    @Param('userId') userId: string,
+    @Body() body: { status: number },
+  ) {
+    return this.adminService.changeUserStatus(userId, body.status);
+  }
+
   @Get('total-hotels')
   async getTotalHotels(): Promise<number> {
     return this.adminService.getTotalHotels();
   }
 
+  @Get('total-users')
+  async getTotalUsers(): Promise<{
+    totalUsersThisMonth: number;
+    totalUsersOverall: number;
+  }> {
+    return this.adminService.getTotalUsers();
+  }
+
   @Get('total-bookings')
   async getTotalBookings(): Promise<number> {
     return this.adminService.getTotalBookings();
+  }
+
+  @Get('total-sales')
+  async getTotalSales(): Promise<{
+    totalSalesThisMonth: number;
+    totalSalesOverall: number;
+  }> {
+    return this.adminService.getTotalSales();
   }
 }
