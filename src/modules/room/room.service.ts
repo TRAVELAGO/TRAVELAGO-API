@@ -25,6 +25,7 @@ import { PageMetaDto } from 'src/common/dtos/page-meta.dto';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
 import { ConfigService } from '@nestjs/config';
+import { FilesService } from '@modules/files/files.service';
 
 @Injectable()
 export class RoomService {
@@ -35,6 +36,7 @@ export class RoomService {
     @InjectRepository(Hotel) private hotelRepository: Repository<Hotel>,
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
     private configService: ConfigService,
+    private filesService: FilesService,
   ) {}
 
   async find(roomId: string): Promise<Room> {
@@ -86,6 +88,7 @@ export class RoomService {
   async create(
     userId: string,
     hotelId: string,
+    images: any,
     createRoomDto: CreateRoomDto,
   ): Promise<Room> {
     const newRoom = this.roomRepository.create({
@@ -113,8 +116,13 @@ export class RoomService {
       throw new NotFoundException('Room type does not exist.');
     }
 
+    const uploadedImages = images
+      ? await this.filesService.uploadFiles(images)
+      : [];
+
     newRoom.hotel = existedHotel;
     newRoom.roomType = existedRoomType;
+    newRoom.images = uploadedImages;
 
     return this.roomRepository.save(newRoom);
   }

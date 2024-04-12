@@ -6,7 +6,8 @@ import { ClassSerializerInterceptor, ValidationPipe } from '@nestjs/common';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  const PORT = app.get(ConfigService).get<string>('PORT') ?? 8888;
+  const configService = app.get(ConfigService);
+  const PORT = configService.get<string>('PORT') ?? 8888;
 
   app.useGlobalPipes(
     new ValidationPipe({
@@ -16,6 +17,8 @@ async function bootstrap() {
   );
 
   app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)));
+
+  app.enableCors();
 
   const options = new DocumentBuilder()
     .setTitle('TRAVELAGO API')
