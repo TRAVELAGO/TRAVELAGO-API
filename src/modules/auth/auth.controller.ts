@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Post,
+  Req,
   UseGuards,
   UsePipes,
   ValidationPipe,
@@ -14,6 +15,8 @@ import { RegisterDto } from './dtos/register.dto';
 import { JwtRefreshGuard } from './guards/jwt-refresh.guard';
 import { LoginResponse } from './strategies/types/login.type';
 import { GetJwtPayload } from '@decorators/get-jwt-payload.decorator';
+import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { Request } from 'express';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -36,5 +39,16 @@ export class AuthController {
   @UseGuards(JwtRefreshGuard)
   async refreshToken(@GetJwtPayload() user): Promise<any> {
     return this.authService.refreshToken(user);
+  }
+
+  @Post('logout')
+  @UseGuards(JwtAuthGuard)
+  async logout(@Req() req: Request): Promise<void> {
+    const userId = (req.user as any).id;
+    const accessToken = req.headers.authorization?.split(' ')[1]; // Extract access token from request headers
+    console.log(userId + '\n' + accessToken + '\n');
+
+    // Call the logout method from the AuthService
+    return this.authService.logout(userId, accessToken);
   }
 }

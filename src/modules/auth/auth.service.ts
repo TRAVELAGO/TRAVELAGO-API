@@ -118,6 +118,30 @@ export class AuthService {
     });
   }
 
+  async logout(id: string, accessToken: string): Promise<void> {
+    const user = await this.userRepository.findOne({
+      where: { id: id },
+    });
+
+    if (!user) {
+      throw new HttpException('User is not exist.', HttpStatus.UNAUTHORIZED);
+    }
+
+    console.log('ACVV' + user.refreshToken);
+
+    if (accessToken !== user.accessToken) {
+      throw new HttpException(
+        'ACCESS_TOKEN_NOT_EXIST_IN_DATA.',
+        HttpStatus.UNAUTHORIZED,
+      );
+    } else {
+      await this.userRepository.update(id, {
+        accessToken: '',
+        refreshToken: '',
+      });
+    }
+  }
+
   async checkRefreshToken(
     userId: string,
     refreshToken: string,
@@ -141,6 +165,7 @@ export class AuthService {
 
     await this.userRepository.update(payload.id, {
       refreshToken: refreshToken,
+      accessToken: accessToken,
     });
     return { accessToken, refreshToken };
   }
