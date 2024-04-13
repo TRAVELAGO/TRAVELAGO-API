@@ -39,6 +39,7 @@ export async function getOrderOption<T>(
   if (
     (direction.toUpperCase() === Order.ASC ||
       direction.toUpperCase() === Order.DESC) &&
+    // Check the properties in the entity and cache them, no need to query next time
     (await checkPropertyOfEntity(entity, [column, 'id'], cacheManager))
   ) {
     orderOption.order = {};

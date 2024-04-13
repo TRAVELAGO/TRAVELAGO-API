@@ -9,7 +9,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
-import { LoginDto } from './dtos/login.dto';
+import { LoginUserDto } from './dtos/login.dto';
 import { User } from '@modules/user/user.entity';
 import { RegisterDto } from './dtos/register.dto';
 import { JwtService } from '@nestjs/jwt';
@@ -63,16 +63,6 @@ export class AuthService {
       });
 
       await queryRunner.manager.save(newUser);
-
-      if (newUser.role === RoleType.HOTEL) {
-        const newHotel = this.hotelRepository.create({
-          user: newUser,
-          name: registerDto?.hotelName,
-          images: [],
-        });
-        await queryRunner.manager.save(newHotel);
-      }
-
       await queryRunner.commitTransaction();
 
       return newUser;
@@ -84,7 +74,7 @@ export class AuthService {
     }
   }
 
-  async login(loginDto: LoginDto): Promise<LoginResponse> {
+  async login(loginDto: LoginUserDto): Promise<LoginResponse> {
     const user = await this.userRepository.findOne({
       where: { email: loginDto.email },
     });

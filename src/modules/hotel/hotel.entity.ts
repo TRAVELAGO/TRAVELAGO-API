@@ -46,6 +46,12 @@ export class Hotel {
   @Column({ type: 'varchar', length: 50, nullable: true })
   longitude: string;
 
+  @Column({ type: 'time' })
+  checkInTime: string;
+
+  @Column({ type: 'time' })
+  checkOutTime: string;
+
   @CreateDateColumn({ type: 'timestamp' })
   createdAt: Date;
 

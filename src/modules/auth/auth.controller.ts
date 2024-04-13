@@ -8,7 +8,7 @@ import {
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import { LoginDto } from './dtos/login.dto';
+import { LoginUserDto } from './dtos/login.dto';
 import { User } from '@modules/user/user.entity';
 import { RegisterDto } from './dtos/register.dto';
 import { JwtRefreshGuard } from './guards/jwt-refresh.guard';
@@ -27,7 +27,7 @@ export class AuthController {
 
   @Post('login')
   @UsePipes(ValidationPipe)
-  async login(@Body() loginDto: LoginDto): Promise<LoginResponse> {
+  async login(@Body() loginDto: LoginUserDto): Promise<LoginResponse> {
     return this.authService.login(loginDto);
   }
 

@@ -9,9 +9,17 @@ import {
   Patch,
   Post,
   Query,
+  UploadedFiles,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiConsumes,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { CreateRoomDto } from './dtos/create-room.dto';
 import { RoomService } from './room.service';
 import { UpdateRoomDto } from './dtos/update-room.dto';
@@ -19,11 +27,13 @@ import { Room } from './room.entity';
 import { JwtAuthGuard } from '@modules/auth/guards/jwt-auth.guard';
 import { JwtPayloadType } from '@modules/auth/strategies/types/jwt-payload.type';
 import { RolesGuard } from '@modules/auth/guards/roles.guard';
-import { SearchRoomDto } from './dtos/seach-room.dto';
+import { SearchRoomDto } from './dtos/search-room.dto';
 import { RoleType } from '@constants/role-type';
 import { GetJwtPayload } from '@decorators/get-jwt-payload.decorator';
 import { Roles } from '@decorators/roles.decorator';
 import { PageDto } from 'src/common/dtos/page.dto';
+import { FileFieldsInterceptor } from '@nestjs/platform-express';
+import { imageFilter } from '@configs/multer-file-filter';
 
 @ApiTags('Rooms')
 @Controller()
@@ -53,17 +63,53 @@ export class RoomController {
   }
 
   @Post('hotels/:hotelId/rooms')
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        name: { type: 'string' },
+        price: { type: 'number', format: 'double' },
+        discount: { type: 'number', format: 'double' },
+        total: { type: 'integer', format: 'int32' },
+        description: { type: 'string' },
+        area: { type: 'integer', format: 'int32' },
+        roomAmenities: { type: 'array' },
+        roomTypeId: { type: 'string' },
+        images: {
+          type: 'array',
+          items: {
+            type: 'string',
+            format: 'binary',
+          },
+        },
+      },
+      required: ['name', 'price', 'total', 'roomTypeId'],
+    },
+  })
   @ApiResponse({ status: 201, description: 'Create room successfully.' })
   @ApiResponse({ status: 400, description: 'Validation failure.' })
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles([RoleType.HOTEL])
+  @UseInterceptors(
+    FileFieldsInterceptor([{ name: 'images' }], { fileFilter: imageFilter }),
+  )
   async create(
     @GetJwtPayload() user: JwtPayloadType,
     @Param('hotelId') hotelId: string,
+    @UploadedFiles()
+    files: {
+      images?: any;
+    },
     @Body() createRoomDto: CreateRoomDto,
-  ): Promise<any> {
-    return this.roomService.create(user.id, hotelId, createRoomDto);
+  ): Promise<Room> {
+    return this.roomService.create(
+      user.id,
+      hotelId,
+      files.images,
+      createRoomDto,
+    );
   }
 
   @Patch('rooms/:id')

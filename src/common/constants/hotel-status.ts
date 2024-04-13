@@ -1,4 +1,4 @@
 export enum HotelStatus {
-  OPEN,
+  OPEN = 1,
   CLOSE,
 }

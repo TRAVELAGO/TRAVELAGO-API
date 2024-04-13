@@ -18,13 +18,14 @@ import { Room } from './room.entity';
 import { CreateRoomDto } from './dtos/create-room.dto';
 import { RoomType } from '@modules/room-type/room-type.entity';
 import { getOrderOption, getPaginationOption } from 'src/utils/pagination';
-import { SearchRoomDto } from './dtos/seach-room.dto';
+import { SearchRoomDto } from './dtos/search-room.dto';
 import { between, findInJsonArray } from 'src/utils/find-option';
 import { PageDto } from 'src/common/dtos/page.dto';
 import { PageMetaDto } from 'src/common/dtos/page-meta.dto';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
 import { ConfigService } from '@nestjs/config';
+import { FilesService } from '@modules/files/files.service';
 
 @Injectable()
 export class RoomService {
@@ -35,6 +36,7 @@ export class RoomService {
     @InjectRepository(Hotel) private hotelRepository: Repository<Hotel>,
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
     private configService: ConfigService,
+    private filesService: FilesService,
   ) {}
 
   async find(roomId: string): Promise<Room> {
@@ -86,6 +88,7 @@ export class RoomService {
   async create(
     userId: string,
     hotelId: string,
+    images: any,
     createRoomDto: CreateRoomDto,
   ): Promise<Room> {
     const newRoom = this.roomRepository.create({
@@ -113,8 +116,13 @@ export class RoomService {
       throw new NotFoundException('Room type does not exist.');
     }
 
+    const uploadedImages = images
+      ? await this.filesService.uploadFiles(images)
+      : [];
+
     newRoom.hotel = existedHotel;
     newRoom.roomType = existedRoomType;
+    newRoom.images = uploadedImages;
 
     return this.roomRepository.save(newRoom);
   }
@@ -188,26 +196,20 @@ export class RoomService {
     hotelId: string,
   ): FindManyOptions<Room> {
     const whereOptions: FindOptionsWhere<Room> = {
-      hotel: hotelId
-        ? {
-            id: hotelId,
-          }
-        : undefined,
-      name: searchRoomDto.name ? Like(`%${searchRoomDto.name}%`) : undefined,
+      hotel: hotelId && {
+        id: hotelId,
+      },
+      name: searchRoomDto.name && Like(`%${searchRoomDto.name}%`),
       price: between(searchRoomDto.priceFrom, searchRoomDto.priceTo),
       area: between(searchRoomDto.areaFrom, searchRoomDto.areaTo),
-      currentAvailable: searchRoomDto.currentAvailable
-        ? MoreThanOrEqual(searchRoomDto.currentAvailable)
-        : undefined,
+      currentAvailable:
+        searchRoomDto.currentAvailable &&
+        MoreThanOrEqual(searchRoomDto.currentAvailable),
       total: searchRoomDto.total,
-      rate: searchRoomDto.rate
-        ? MoreThanOrEqual(searchRoomDto.rate)
-        : undefined,
-      roomType: searchRoomDto.roomTypeId
-        ? {
-            id: searchRoomDto.roomTypeId,
-          }
-        : undefined,
+      rate: searchRoomDto.rate && MoreThanOrEqual(searchRoomDto.rate),
+      roomType: searchRoomDto.roomTypeId && {
+        id: searchRoomDto.roomTypeId,
+      },
       roomAmenities: findInJsonArray(
         searchRoomDto.roomAmenities,
         this.configService.get<string>('DB_TYPE'),
