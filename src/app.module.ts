@@ -13,6 +13,7 @@ import { CacheModule } from '@nestjs/cache-manager';
 import * as redisStore from 'cache-manager-redis-store';
 import { ClearCacheService } from './clear-cache.service';
 import { FilesModule } from '@modules/files/files.module';
+import { BookingModule } from '@modules/booking/booking.module';
 
 @Module({
   imports: [
@@ -41,6 +42,7 @@ import { FilesModule } from '@modules/files/files.module';
     RoomTypeModule,
     FilesModule,
     AdminModule,
+    BookingModule,
   ],
   providers: [ClearCacheService],
 })

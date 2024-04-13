@@ -27,7 +27,7 @@ import { Room } from './room.entity';
 import { JwtAuthGuard } from '@modules/auth/guards/jwt-auth.guard';
 import { JwtPayloadType } from '@modules/auth/strategies/types/jwt-payload.type';
 import { RolesGuard } from '@modules/auth/guards/roles.guard';
-import { SearchRoomDto } from './dtos/seach-room.dto';
+import { SearchRoomDto } from './dtos/search-room.dto';
 import { RoleType } from '@constants/role-type';
 import { GetJwtPayload } from '@decorators/get-jwt-payload.decorator';
 import { Roles } from '@decorators/roles.decorator';
