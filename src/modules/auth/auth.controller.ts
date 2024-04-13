@@ -51,4 +51,19 @@ export class AuthController {
     // Call the logout method from the AuthService
     return this.authService.logout(userId, accessToken);
   }
+
+  @Post('fogetPassword')
+  async forgetPassWord(email: string): Promise<void> {
+    return this.authService.forgetPassword(email);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('checkCodeOtp')
+  async checkCodeOtp(
+    @Req() req: Request,
+    @Body() codeOtp: string,
+  ): Promise<void> {
+    const userId = (req.user as any).id;
+    return this.authService.checkCodeOtp(userId, codeOtp);
+  }
 }

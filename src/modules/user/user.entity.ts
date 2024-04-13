@@ -52,4 +52,7 @@ export class User {
   @Column({ nullable: true })
   @Exclude({ toPlainOnly: true })
   accessToken: string;
+
+  @Column({ unique: true })
+  codeOtp: string;
 }

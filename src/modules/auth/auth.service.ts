@@ -16,6 +16,8 @@ import { JwtService } from '@nestjs/jwt';
 import { JwtPayloadType } from './strategies/types/jwt-payload.type';
 import { LoginResponse, Token } from './strategies/types/login.type';
 import { RoleType } from '@constants/role-type';
+import { generateRandomOTP, generateRandomString } from '../../utils/random';
+// import { sendMail } from 'src/utils/sendmail';
 
 @Injectable()
 export class AuthService {
@@ -176,5 +178,55 @@ export class AuthService {
     const hash = await bcrypt.hash(password, salt);
 
     return hash;
+  }
+
+  async forgetPassword(email: string): Promise<void> {
+    const user = this.userRepository.findOne({
+      where: { email: email },
+    });
+
+    if (!user) {
+      throw new HttpException('Email is noy correct', HttpStatus.BAD_REQUEST);
+    } else {
+      // const id = (await user).id;
+      // const email = (await user).email;
+      // const role = (await user).role;
+      // const jwtPayload: JwtPayloadType = {
+      //   id: id,
+      //   email: email,
+      //   role: role,
+      // };
+      // const accessToken = (await this.generateToken(jwtPayload)).accessToken;
+      // const refreshToken = (await this.generateToken(jwtPayload)).refreshToken;
+
+      // this.userRepository.update({email}, {accessToken: accessToken, refreshToken});
+
+      const codeOtp = generateRandomOTP();
+      await this.userRepository.update({ email }, { codeOtp: codeOtp });
+
+      //send mail with code
+
+      // sendMail(email, 'CodeOtp', codeOtp);
+    }
+  }
+
+  async checkCodeOtp(id: string, CodeOtp: string) {
+    let checkcodeOtp: string | null = null;
+    // check database
+    try {
+      checkcodeOtp = (await this.userRepository.findOne({ where: { id: id } }))
+        .codeOtp;
+    } catch (error) {}
+
+    if (checkcodeOtp === CodeOtp) {
+      // let currentTime = (new Date().getTime() + (7 * 60 * 60 * 1000));
+      // // console.log(currentTime)
+      // // console.log(verifyCode.timeExpired.getTime())
+      // if (currentTime > verifyCode.timeExpired.getTime()) {
+
+      // }
+      const newPass = await this.hashPassword(generateRandomString(10));
+      await this.userRepository.update({ id: id }, { password: newPass });
+    }
   }
 }
