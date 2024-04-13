@@ -33,6 +33,6 @@ async function bootstrap() {
   app.enableShutdownHooks();
 
   await app.listen(PORT);
-  console.log(`Server run at http://localhost:${PORT}`);
+  console.log(`Server run at http://localhost:${PORT}/docs`);
 }
 bootstrap();

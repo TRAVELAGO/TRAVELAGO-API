@@ -18,7 +18,7 @@ import { Room } from './room.entity';
 import { CreateRoomDto } from './dtos/create-room.dto';
 import { RoomType } from '@modules/room-type/room-type.entity';
 import { getOrderOption, getPaginationOption } from 'src/utils/pagination';
-import { SearchRoomDto } from './dtos/seach-room.dto';
+import { SearchRoomDto } from './dtos/search-room.dto';
 import { between, findInJsonArray } from 'src/utils/find-option';
 import { PageDto } from 'src/common/dtos/page.dto';
 import { PageMetaDto } from 'src/common/dtos/page-meta.dto';
@@ -196,26 +196,20 @@ export class RoomService {
     hotelId: string,
   ): FindManyOptions<Room> {
     const whereOptions: FindOptionsWhere<Room> = {
-      hotel: hotelId
-        ? {
-            id: hotelId,
-          }
-        : undefined,
-      name: searchRoomDto.name ? Like(`%${searchRoomDto.name}%`) : undefined,
+      hotel: hotelId && {
+        id: hotelId,
+      },
+      name: searchRoomDto.name && Like(`%${searchRoomDto.name}%`),
       price: between(searchRoomDto.priceFrom, searchRoomDto.priceTo),
       area: between(searchRoomDto.areaFrom, searchRoomDto.areaTo),
-      currentAvailable: searchRoomDto.currentAvailable
-        ? MoreThanOrEqual(searchRoomDto.currentAvailable)
-        : undefined,
+      currentAvailable:
+        searchRoomDto.currentAvailable &&
+        MoreThanOrEqual(searchRoomDto.currentAvailable),
       total: searchRoomDto.total,
-      rate: searchRoomDto.rate
-        ? MoreThanOrEqual(searchRoomDto.rate)
-        : undefined,
-      roomType: searchRoomDto.roomTypeId
-        ? {
-            id: searchRoomDto.roomTypeId,
-          }
-        : undefined,
+      rate: searchRoomDto.rate && MoreThanOrEqual(searchRoomDto.rate),
+      roomType: searchRoomDto.roomTypeId && {
+        id: searchRoomDto.roomTypeId,
+      },
       roomAmenities: findInJsonArray(
         searchRoomDto.roomAmenities,
         this.configService.get<string>('DB_TYPE'),
