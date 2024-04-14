@@ -10,5 +10,6 @@ export class ClearCacheService implements OnApplicationShutdown {
     // clear cache when change DB design
     // this.cacheService.reset();
     // console.log('Clear cache successfully.');
+    console.log("ass");
   }
 }
