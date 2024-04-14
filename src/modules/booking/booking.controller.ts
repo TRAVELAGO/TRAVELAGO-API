@@ -15,7 +15,6 @@ import { UpdateBookingDto } from './dtos/update-booking.dto';
 import { Booking } from './booking.entity';
 import { JwtAuthGuard } from '@modules/auth/guards/jwt-auth.guard';
 import { JwtPayloadType } from '@modules/auth/strategies/types/jwt-payload.type';
-import { RolesGuard } from '@modules/auth/guards/roles.guard';
 import { RoleType } from '@constants/role-type';
 import { GetJwtPayload } from '@decorators/get-jwt-payload.decorator';
 import { Roles } from '@decorators/roles.decorator';
@@ -56,9 +55,7 @@ export class BookingController {
   @ApiResponse({ status: 201, description: 'Create booking successfully.' })
   @ApiResponse({ status: 400, description: 'Validation failure.' })
   @ApiResponse({ status: 409, description: 'Conflict booking time.' })
-  @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles([RoleType.USER])
+  @Roles(RoleType.USER)
   async bookingOnline(
     @GetJwtPayload() user: JwtPayloadType,
     @Body() createBookingDto: CreateBookingDto,
@@ -74,9 +71,7 @@ export class BookingController {
   @ApiResponse({ status: 201, description: 'Create booking successfully.' })
   @ApiResponse({ status: 400, description: 'Validation failure.' })
   @ApiResponse({ status: 409, description: 'Conflict booking time.' })
-  @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles([RoleType.HOTEL])
+  @Roles(RoleType.HOTEL)
   async bookingDirectly(
     @GetJwtPayload() user: JwtPayloadType,
     @Body() createBookingDto: CreateBookingDto,
@@ -92,9 +87,7 @@ export class BookingController {
   @ApiResponse({ status: 200, description: 'Update booking successfully.' })
   @ApiResponse({ status: 404, description: 'Booking does not exist.' })
   @ApiResponse({ status: 403 })
-  @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles([RoleType.HOTEL])
+  @Roles(RoleType.HOTEL)
   async checkIn(
     @GetJwtPayload() user: JwtPayloadType,
     @Param('id') bookingId: string,
@@ -110,9 +103,7 @@ export class BookingController {
   @ApiResponse({ status: 200, description: 'Update booking successfully.' })
   @ApiResponse({ status: 404, description: 'Booking does not exist.' })
   @ApiResponse({ status: 403 })
-  @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles([RoleType.USER, RoleType.HOTEL])
+  @Roles(RoleType.USER, RoleType.HOTEL)
   async cancelBooking(
     @GetJwtPayload() user: JwtPayloadType,
     @Param('id') bookingId: string,
@@ -129,9 +120,7 @@ export class BookingController {
   @ApiResponse({ status: 200, description: 'Update booking successfully.' })
   @ApiResponse({ status: 400, description: 'Validation failure.' })
   @ApiResponse({ status: 404, description: 'Booking does not exist.' })
-  @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles([RoleType.USER])
+  @Roles(RoleType.USER)
   async update(
     @GetJwtPayload() user: JwtPayloadType,
     @Param('id') bookingId: string,
