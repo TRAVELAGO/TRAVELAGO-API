@@ -53,6 +53,6 @@ export class User {
   @Exclude({ toPlainOnly: true })
   accessToken: string;
 
-  @Column({ unique: true })
+  @Column({ nullable: true })
   codeOtp: string;
 }
