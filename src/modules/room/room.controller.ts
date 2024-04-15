@@ -10,23 +10,14 @@ import {
   Post,
   Query,
   UploadedFiles,
-  UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
-import {
-  ApiBearerAuth,
-  ApiBody,
-  ApiConsumes,
-  ApiResponse,
-  ApiTags,
-} from '@nestjs/swagger';
+import { ApiBody, ApiConsumes, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { CreateRoomDto } from './dtos/create-room.dto';
 import { RoomService } from './room.service';
 import { UpdateRoomDto } from './dtos/update-room.dto';
 import { Room } from './room.entity';
-import { JwtAuthGuard } from '@modules/auth/guards/jwt-auth.guard';
 import { JwtPayloadType } from '@modules/auth/strategies/types/jwt-payload.type';
-import { RolesGuard } from '@modules/auth/guards/roles.guard';
 import { SearchRoomDto } from './dtos/search-room.dto';
 import { RoleType } from '@constants/role-type';
 import { GetJwtPayload } from '@decorators/get-jwt-payload.decorator';
@@ -89,9 +80,7 @@ export class RoomController {
   })
   @ApiResponse({ status: 201, description: 'Create room successfully.' })
   @ApiResponse({ status: 400, description: 'Validation failure.' })
-  @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles([RoleType.HOTEL])
+  @Roles(RoleType.HOTEL)
   @UseInterceptors(
     FileFieldsInterceptor([{ name: 'images' }], { fileFilter: imageFilter }),
   )
@@ -117,9 +106,7 @@ export class RoomController {
   @ApiResponse({ status: 400, description: 'Validation failure.' })
   @ApiResponse({ status: 404, description: 'Room does not exist.' })
   @ApiResponse({ status: 404, description: 'Room Type does not exist.' })
-  @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles([RoleType.HOTEL])
+  @Roles(RoleType.HOTEL)
   async update(
     @GetJwtPayload() user: JwtPayloadType,
     @Param('id') roomId: string,
@@ -132,9 +119,7 @@ export class RoomController {
   @ApiResponse({ status: 204, description: 'Delete room successfully.' })
   @ApiResponse({ status: 404, description: 'Room not found.' })
   @HttpCode(HttpStatus.NO_CONTENT)
-  @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles([RoleType.HOTEL])
+  @Roles(RoleType.HOTEL)
   async delete(
     @GetJwtPayload() user: JwtPayloadType,
     @Param('id') roomId: string,
