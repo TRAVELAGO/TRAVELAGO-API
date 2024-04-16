@@ -4,7 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Not, Between } from 'typeorm';
+import { Repository, Not, Between, Equal } from 'typeorm';
 import { RoleType } from '@constants/role-type';
 import { User } from '@modules/user/user.entity';
 import { Hotel } from '@modules/hotel/hotel.entity';
@@ -24,6 +24,10 @@ export class AdminService {
   async login(loginDto: LoginDto) {
     const { email, password } = loginDto;
 
+    if (!email || !password) {
+      throw new UnauthorizedException('Missing email or password');
+    }
+
     const admin = await this.userRepository.findOne({ where: { email } });
 
     if (!admin || admin.password !== password) {
@@ -34,6 +38,15 @@ export class AdminService {
     }
 
     return { status: true };
+  }
+
+  async getHotelOwner() {
+    return this.userRepository.find({
+      where: {
+        role: Equal(RoleType.HOTEL),
+        status: 0,
+      },
+    });
   }
 
   async getAllUsers() {
