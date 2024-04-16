@@ -16,6 +16,11 @@ export class AdminController {
     return this.adminService.getAllUsers();
   }
 
+  @Get('hotel-owner')
+  async getHotelOwner() {
+    return this.adminService.getHotelOwner();
+  }
+
   @Post('users/:userId/status')
   async changeUserStatus(
     @Param('userId') userId: string,
