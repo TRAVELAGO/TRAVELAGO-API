@@ -121,4 +121,52 @@ export class AdminService {
 
     return { totalSalesThisMonth, totalSalesOverall };
   }
+
+  async getUsersSummary(startDate: Date, endDate: Date): Promise<{ date: string; count: number }[]> {
+    const usersSummary = await this.userRepository
+      .createQueryBuilder('user')
+      .select('DATE(user.createdAt) AS date, COUNT(*) AS count')
+      .where('user.createdAt BETWEEN :startDate AND :endDate', { startDate, endDate })
+      .groupBy('DATE(user.createdAt)')
+      .orderBy('DATE(user.createdAt)')
+      .getRawMany();
+
+    return usersSummary.map(item => ({ date: item.date, count: parseInt(item.count) }));
+  }
+
+  async getSalesSummary(startDate: Date, endDate: Date): Promise<{ date: string; totalAmount: number }[]> {
+    const salesSummary = await this.paymentRepository
+      .createQueryBuilder('payment')
+      .select('DATE(payment.createdAt) AS date, SUM(payment.amount) AS totalAmount')
+      .where('payment.createdAt BETWEEN :startDate AND :endDate', { startDate, endDate })
+      .groupBy('DATE(payment.createdAt)')
+      .orderBy('DATE(payment.createdAt)')
+      .getRawMany();
+
+    return salesSummary.map(item => ({ date: item.date, totalAmount: parseFloat(item.totalAmount) }));
+  }
+
+  async getBookingsSummary(startDate: Date, endDate: Date): Promise<{ date: string; count: number }[]> {
+    const bookingsSummary = await this.bookingRepository
+      .createQueryBuilder('booking')
+      .select('DATE(booking.createdAt) AS date, COUNT(*) AS count')
+      .where('booking.createdAt BETWEEN :startDate AND :endDate', { startDate, endDate })
+      .groupBy('DATE(booking.createdAt)')
+      .orderBy('DATE(booking.createdAt)')
+      .getRawMany();
+
+    return bookingsSummary.map(item => ({ date: item.date, count: parseInt(item.count) }));
+  }
+
+  async getHotelsSummary(startDate: Date, endDate: Date): Promise<{ date: string; count: number }[]> {
+    const hotelsSummary = await this.hotelRepository
+      .createQueryBuilder('hotel')
+      .select('DATE(hotel.createdAt) AS date, COUNT(*) AS count')
+      .where('hotel.createdAt BETWEEN :startDate AND :endDate', { startDate, endDate })
+      .groupBy('DATE(hotel.createdAt)')
+      .orderBy('DATE(hotel.createdAt)')
+      .getRawMany();
+
+    return hotelsSummary.map(item => ({ date: item.date, count: parseInt(item.count) }));
+  }
 }
