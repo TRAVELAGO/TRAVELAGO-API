@@ -1,7 +1,9 @@
 import { Controller, Post, Body, Get, Param, Query } from '@nestjs/common';
 import { AdminService } from './admin.service';
 import { LoginDto } from './dtos/login.dto';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('Admins')
 @Controller('admin')
 export class AdminController {
   constructor(private adminService: AdminService) {}

@@ -1,7 +1,9 @@
 import { HotelStatus } from '@constants/hotel-status';
 import { City } from '@modules/city/city.entity';
+import { FileObject } from '@modules/files/types/file-object';
 import { Room } from '@modules/room/room.entity';
 import { User } from '@modules/user/user.entity';
+import { formatFileObjects, getFileObjects } from 'src/utils/files';
 import {
   Entity,
   Column,
@@ -25,8 +27,16 @@ export class Hotel {
 
   @Column('json', {
     nullable: true,
+    transformer: {
+      to(value: FileObject[]): string[] {
+        return formatFileObjects(value);
+      },
+      from(value: string[]): FileObject[] {
+        return getFileObjects(value);
+      },
+    },
   })
-  images: string[];
+  images: FileObject[];
 
   @Column({ type: 'decimal', precision: 2, scale: 1, nullable: true })
   rate: number;

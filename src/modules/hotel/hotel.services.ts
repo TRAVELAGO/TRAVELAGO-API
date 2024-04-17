@@ -11,11 +11,13 @@ import { Hotel } from '@modules/hotel/hotel.entity';
 import { HotelDto } from './dtos/hotel.dto';
 import { HotelStatus } from '@constants/hotel-status';
 import { UpdateHotelDto } from './dtos/update-hotel.dto';
+import { FilesService } from '@modules/files/files.service';
 
 @Injectable()
 export class HotelService {
   constructor(
     @InjectRepository(Hotel) private hotelRepository: Repository<Hotel>,
+    private filesService: FilesService,
   ) {}
 
   async findAll(): Promise<Hotel[]> {
@@ -78,7 +80,11 @@ export class HotelService {
     }
   }
 
-  async create(userId: string, hotelDto: HotelDto): Promise<Hotel> {
+  async create(
+    userId: string,
+    images: any,
+    hotelDto: HotelDto,
+  ): Promise<Hotel> {
     const hotelExists = await this.hotelRepository.exists({
       where: {
         name: hotelDto.name,
@@ -90,10 +96,15 @@ export class HotelService {
       throw new BadRequestException('The hotel already exists.');
     }
 
+    const uploadedImages = images
+      ? await this.filesService.uploadFiles(images)
+      : [];
+
     const createdHotel = await this.hotelRepository.create({
       status: HotelStatus.OPEN,
       ...hotelDto,
       user: { id: userId },
+      images: uploadedImages,
     });
 
     return this.hotelRepository.save(createdHotel);

@@ -93,7 +93,6 @@ export class RoomService {
   ): Promise<Room> {
     const newRoom = this.roomRepository.create({
       ...createRoomDto,
-      currentAvailable: createRoomDto.total,
     });
 
     const existedHotel = await this.hotelRepository
@@ -202,9 +201,6 @@ export class RoomService {
       name: searchRoomDto.name && Like(`%${searchRoomDto.name}%`),
       price: between(searchRoomDto.priceFrom, searchRoomDto.priceTo),
       area: between(searchRoomDto.areaFrom, searchRoomDto.areaTo),
-      currentAvailable:
-        searchRoomDto.currentAvailable &&
-        MoreThanOrEqual(searchRoomDto.currentAvailable),
       total: searchRoomDto.total,
       rate: searchRoomDto.rate && MoreThanOrEqual(searchRoomDto.rate),
       roomType: searchRoomDto.roomTypeId && {

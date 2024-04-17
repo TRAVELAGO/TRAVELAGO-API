@@ -44,12 +44,6 @@ export class SearchRoomDto extends PageOptionsDto {
   @IsOptional()
   readonly areaTo?: number;
 
-  @ApiPropertyOptional({ minimum: 0 })
-  @Transform(({ value }) => Number(value))
-  @Min(0)
-  @IsOptional()
-  readonly currentAvailable?: number;
-
   @ApiPropertyOptional({ maximum: 5 })
   @Transform(({ value }) => Number(value))
   @Max(5)
