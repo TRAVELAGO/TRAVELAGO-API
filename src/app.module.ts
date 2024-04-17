@@ -14,6 +14,9 @@ import * as redisStore from 'cache-manager-redis-store';
 import { ClearCacheService } from './clear-cache.service';
 import { FilesModule } from '@modules/files/files.module';
 import { BookingModule } from '@modules/booking/booking.module';
+import { PaymentModule } from '@modules/payment/payment.module';
+import { ScheduleModule } from '@nestjs/schedule';
+import { TasksModule } from '@modules/tasks/tasks.module';
 
 @Module({
   imports: [
@@ -35,6 +38,8 @@ import { BookingModule } from '@modules/booking/booking.module';
       url: process.env.REDIS_URL,
     }),
     PassportModule,
+    ScheduleModule.forRoot(),
+    TasksModule,
     AuthModule,
     UserModule,
     HotelModule,
@@ -43,6 +48,7 @@ import { BookingModule } from '@modules/booking/booking.module';
     FilesModule,
     AdminModule,
     BookingModule,
+    PaymentModule,
   ],
   providers: [ClearCacheService],
 })

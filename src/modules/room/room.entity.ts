@@ -23,10 +23,10 @@ export class Room {
   @Column({ length: 100 })
   name: string;
 
-  @Column({ type: 'decimal', precision: 10, scale: 2 })
+  @Column({ type: 'double' })
   price: number;
 
-  @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })
+  @Column({ type: 'double' })
   discount: number;
 
   @Column('json', {
@@ -60,7 +60,7 @@ export class Room {
   @Column('json', {
     nullable: true,
   })
-  roomAmenities: number[];
+  roomAmenities: string[];
 
   @CreateDateColumn({ type: 'timestamp' })
   createdAt: Date;
