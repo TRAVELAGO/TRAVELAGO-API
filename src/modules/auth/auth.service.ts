@@ -97,7 +97,20 @@ export class AuthService {
       role: user.role,
     };
 
-    return { ...(await this.generateToken(jwtPayload)), user };
+    const response: LoginResponse = {
+      ...(await this.generateToken(jwtPayload)),
+      user,
+    };
+
+    if (user.role === RoleType.HOTEL) {
+      response.hotel = await this.hotelRepository.find({
+        where: {
+          user: { id: user.id },
+        },
+      });
+    }
+
+    return response;
   }
 
   async refreshToken(payload: JwtPayloadType): Promise<Token> {

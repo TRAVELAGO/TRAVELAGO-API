@@ -43,9 +43,6 @@ export class Room {
   images: FileObject[];
 
   @Column()
-  currentAvailable: number;
-
-  @Column()
   total: number;
 
   @Column({ nullable: true })

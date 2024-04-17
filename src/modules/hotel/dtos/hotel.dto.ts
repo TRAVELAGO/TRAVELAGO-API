@@ -1,12 +1,7 @@
 import { HotelStatus } from '@constants/hotel-status';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import {
-  IsArray,
-  IsEnum,
-  IsNotEmpty,
-  IsOptional,
-  Matches,
-} from 'class-validator';
+import { Transform } from 'class-transformer';
+import { IsEnum, IsNotEmpty, IsOptional, Matches } from 'class-validator';
 import { timeRegex } from 'src/utils/date';
 
 export class HotelDto {
@@ -19,15 +14,11 @@ export class HotelDto {
   readonly address: string;
 
   @ApiPropertyOptional()
-  @IsArray()
-  @IsOptional()
-  readonly images: string[];
-
-  @ApiPropertyOptional()
   @IsOptional()
   readonly description: string;
 
   @ApiPropertyOptional({ default: HotelStatus.OPEN })
+  @Transform(({ value }) => Number(value))
   @IsEnum(HotelStatus)
   @IsOptional()
   readonly status: HotelStatus;
