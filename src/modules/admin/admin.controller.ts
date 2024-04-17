@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Get, Param } from '@nestjs/common';
+import { Controller, Post, Body, Get, Param, Query } from '@nestjs/common';
 import { AdminService } from './admin.service';
 import { LoginDto } from './dtos/login.dto';
 
@@ -14,6 +14,38 @@ export class AdminController {
   @Get('users')
   async getAllUsers() {
     return this.adminService.getAllUsers();
+  }
+
+  @Get('users-summary')
+  async getUsersSummary(
+    @Query('startDate') startDate: Date,
+    @Query('endDate') endDate: Date,
+  ) {
+    return this.adminService.getUsersSummary(startDate, endDate);
+  }
+
+  @Get('sales-summary')
+  async getSalesSummary(
+    @Query('startDate') startDate: Date,
+    @Query('endDate') endDate: Date,
+  ) {
+    return this.adminService.getSalesSummary(startDate, endDate);
+  }
+
+  @Get('bookings-summary')
+  async getBookingsSummary(
+    @Query('startDate') startDate: Date,
+    @Query('endDate') endDate: Date,
+  ) {
+    return this.adminService.getBookingsSummary(startDate, endDate);
+  }
+
+  @Get('hotels-summary')
+  async getHotelsSummary(
+    @Query('startDate') startDate: Date,
+    @Query('endDate') endDate: Date,
+  ) {
+    return this.adminService.getHotelsSummary(startDate, endDate);
   }
 
   @Get('hotel-owner')
