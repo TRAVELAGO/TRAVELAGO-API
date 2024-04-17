@@ -28,6 +28,11 @@ export class AuthController {
     return this.authService.register(registerDto);
   }
 
+  @Post('registerHotel')
+  async registerHotel(@Body() registerHotelDto: RegisterDto): Promise<Partial<User>> {
+    return this.authService.registerHotel(registerHotelDto);
+  }
+
   @Post('login')
   @UsePipes(ValidationPipe)
   async login(@Body() loginDto: LoginDto): Promise<LoginResponse> {

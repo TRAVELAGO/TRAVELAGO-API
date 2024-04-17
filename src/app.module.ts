@@ -8,6 +8,8 @@ import { HotelModule } from './modules/hotel/hotel.module';
 import { RoomModule } from '@modules/room/room.module';
 import { RoomTypeModule } from '@modules/room-type/room-type.module';
 import { PassportModule } from '@nestjs/passport';
+import { AmenityService } from '@modules/amenity/amenity.service';
+import { AmenityModule } from '@modules/amenity/amenity.module';
 
 @Module({
   imports: [
@@ -24,6 +26,7 @@ import { PassportModule } from '@nestjs/passport';
     HotelModule,
     RoomModule,
     RoomTypeModule,
+    AmenityModule,
   ],
   providers: [],
 })

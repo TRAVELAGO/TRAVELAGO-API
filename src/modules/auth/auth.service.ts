@@ -17,6 +17,7 @@ import { JwtPayloadType } from './strategies/types/jwt-payload.type';
 import { LoginResponse, Token } from './strategies/types/login.type';
 import { RoleType } from '@constants/role-type';
 import { generateRandomOTP, generateRandomString } from '../../utils/random';
+import { RegisterHotelDto } from './dtos/registerHotel.dto';
 // import { sendMail } from 'src/utils/sendmail';
 
 @Injectable()
@@ -62,6 +63,7 @@ export class AuthService {
       const newUser = await this.userRepository.create({
         ...registerDto,
         password: hashPassword,
+        role: RoleType.USER,
       });
 
       await queryRunner.manager.save(newUser);
@@ -74,6 +76,62 @@ export class AuthService {
         });
         await queryRunner.manager.save(newHotel);
       }
+
+      await queryRunner.commitTransaction();
+
+      return newUser;
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
+  async registerHotel(registerHotelDto: RegisterHotelDto): Promise<Partial<User>> {
+
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      const phoneExists = await this.userRepository.exists({
+        where: {
+          phoneNumber: registerHotelDto.phoneNumber,
+        },
+      });
+
+      if (phoneExists) {
+        throw new BadRequestException('Phone number already exists.');
+      }
+
+      const existedUser = await this.userRepository.findOne({
+        where: { email: registerHotelDto.email },
+      });
+
+      if (existedUser) {
+        throw new BadRequestException('Email has been verified.');
+      }
+
+      const hashPassword = await this.hashPassword(registerHotelDto.password);
+
+      const newUser = await this.userRepository.create({
+        ...registerHotelDto,
+        password: hashPassword,
+        role: RoleType.HOTEL,
+        status: 0,
+      });
+
+      await queryRunner.manager.save(newUser);
+
+      
+      const newHotel = this.hotelRepository.create({
+        user: newUser,
+        name: registerHotelDto?.hotelName,
+        images: [],
+      });
+      await queryRunner.manager.save(newHotel);
+      
 
       await queryRunner.commitTransaction();
 
