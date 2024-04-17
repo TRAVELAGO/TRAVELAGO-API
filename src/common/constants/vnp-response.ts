@@ -1,0 +1,31 @@
+export enum VNPayResponse {
+  SUCCESS = '00',
+  INVALID_TMN_CODE = '02',
+  BAD_REQUEST = '03',
+  TRANSACTION_NOT_FOUND = '91',
+  DUPLICATE_REQUEST = '94',
+  INVALID_SECURE_HASH = '97',
+  OTHER = '99',
+}
+
+export enum VNPRefundResponse {
+  SUCCESS = '00',
+  INVALID_TMN_CODE = '02',
+  BAD_REQUEST = '03',
+  TRANSACTION_NOT_FOUND = '91',
+  IN_PROGRESS = '94',
+  DENIED = '95',
+  INVALID_SECURE_HASH = '97',
+  OTHER = '99',
+}
+
+export enum VNPTransactionStatus {
+  SUCCESS = '00',
+  TRANSACTION_IN_PROGRESS = '02',
+  TRANSACTION_ERROR = '03',
+  TRANSACTION_NOT_FOUND = '04',
+  REFUND_IN_PROGRESS = '05',
+  REFUNDED = '06',
+  TRANSACTION_FRAUD = '07',
+  REFUND_DENIED = '99',
+}

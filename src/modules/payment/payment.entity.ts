@@ -10,7 +10,7 @@ import {
   UpdateDateColumn,
   ManyToOne,
   OneToOne,
-  JoinTable,
+  JoinColumn,
 } from 'typeorm';
 
 @Entity()
@@ -28,7 +28,10 @@ export class Payment {
   status: PaymentStatus;
 
   @Column({ default: () => 'CURRENT_TIMESTAMP' })
-  PaymentDate: Date;
+  paymentDate: Date;
+
+  @Column()
+  transactionCode: string;
 
   @CreateDateColumn({ type: 'timestamp' })
   createdAt: Date;
@@ -40,6 +43,6 @@ export class Payment {
   user: User;
 
   @OneToOne(() => Booking, (booking) => booking.payment)
-  @JoinTable()
+  @JoinColumn({ name: 'bookingId' })
   booking: Booking;
 }

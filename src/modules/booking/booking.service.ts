@@ -1,3 +1,4 @@
+import { ConfigService } from '@nestjs/config';
 import { UpdateBookingDto } from './dtos/update-booking.dto';
 import {
   BadRequestException,
@@ -10,6 +11,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import {
   Brackets,
+  DataSource,
   FindManyOptions,
   FindOptionsWhere,
   LessThanOrEqual,
@@ -27,16 +29,25 @@ import { PageDto } from 'src/common/dtos/page.dto';
 import { getOrderOption, getPaginationOption } from 'src/utils/pagination';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { PageMetaDto } from 'src/common/dtos/page-meta.dto';
-import { Cache } from 'cache-manager';
 import { BookingType } from '@constants/booking-type';
 import { Room } from '@modules/room/room.entity';
+import { CreateBookingResponseDto } from './dtos/create-booking-response.dto';
+import { addMinutes } from 'date-fns';
+import { VNPayService } from '@shared/services/vnpay.services';
+import { REDIS_HASH_BOOKING_KEY, MAX_PAYMENT_TIME } from '@constants/constants';
+import { Cache } from 'cache-manager';
+import { RedisService } from '@shared/services/redis.service';
 
 @Injectable()
 export class BookingService {
   constructor(
     @InjectRepository(Booking) private bookingRepository: Repository<Booking>,
     @InjectRepository(Room) private roomRepository: Repository<Room>,
+    private dataSource: DataSource,
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
+    private redisService: RedisService,
+    private configService: ConfigService,
+    private vnPayService: VNPayService,
   ) {}
 
   async find(user: JwtPayloadType, bookingId: string): Promise<Booking> {
@@ -99,7 +110,7 @@ export class BookingService {
     return new PageDto(bookings, pageMetaDto);
   }
 
-  async create(
+  private async createBooking(
     user: JwtPayloadType,
     createBookingDto: CreateBookingDto,
     bookingType: BookingType,
@@ -107,11 +118,13 @@ export class BookingService {
     if (!Object.values(BookingType).includes(bookingType)) {
       throw new BadRequestException('booking type is invalid!');
     }
+    const isUserRole: boolean = isUser(user);
+    const isHotelRole: boolean = isHotel(user);
 
     // Only allows users to book online and hotel book directly
     if (
-      (isUser(user) && bookingType !== BookingType.ONLINE) ||
-      (isHotel(user) && bookingType !== BookingType.DIRECTLY)
+      (isUserRole && bookingType !== BookingType.ONLINE) ||
+      (isHotelRole && bookingType !== BookingType.DIRECTLY)
     ) {
       throw new ForbiddenException();
     }
@@ -132,7 +145,7 @@ export class BookingService {
     }
 
     // Check the room belongs to the hotel
-    if (isHotel(user) && existedRoom.hotel.user.id !== user.id) {
+    if (isHotelRole && existedRoom.hotel.user.id !== user.id) {
       throw new ForbiddenException();
     }
 
@@ -159,7 +172,14 @@ export class BookingService {
     }
 
     // check conflict booking time
-    if (await this.checkConflictBookingTime(existedRoom.id, dateFrom, dateTo)) {
+    if (
+      await this.checkConflictBookingTime(
+        existedRoom.id,
+        existedRoom.total,
+        dateFrom,
+        dateTo,
+      )
+    ) {
       throw new ConflictException('The room has been booked at this time');
     }
 
@@ -169,18 +189,75 @@ export class BookingService {
       hotel: {
         id: existedRoom.hotel.id,
       },
-      user: isUser(user)
+      user: isUserRole
         ? {
             id: user.id,
           }
         : undefined,
       totalAmount: existedRoom.price,
       totalDiscount: existedRoom.discount,
-      status: isHotel(user) ? BookingStatus.CHECK_IN : BookingStatus.NEW,
-      type: isHotel(user) ? BookingType.DIRECTLY : BookingType.ONLINE,
+      status: isHotelRole ? BookingStatus.CHECK_IN : BookingStatus.NEW,
+      type: isHotelRole ? BookingType.DIRECTLY : BookingType.ONLINE,
       dateFrom,
       dateTo,
     });
+
+    return newBooking;
+  }
+
+  async createBookingOnline(
+    user: JwtPayloadType,
+    createBookingDto: CreateBookingDto,
+    ipAddress?: string,
+  ): Promise<CreateBookingResponseDto> {
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      const newBooking = await this.createBooking(
+        user,
+        createBookingDto,
+        BookingType.ONLINE,
+      );
+      // TO: chạy cron job lấy các cache match *:payment.
+      await queryRunner.manager.save(newBooking);
+
+      const paymentUrl = this.vnPayService.getVNPayUrl(
+        this.configService.get<string>('VNP_PAY_URL'),
+        this.vnPayService.getPayQueryData(newBooking, ipAddress),
+      );
+
+      const response = new CreateBookingResponseDto(newBooking, paymentUrl);
+
+      await this.redisService.hSet(
+        REDIS_HASH_BOOKING_KEY,
+        newBooking.id,
+        String(
+          addMinutes(newBooking.createdAt, MAX_PAYMENT_TIME + 5).getTime(),
+        ),
+      );
+
+      await queryRunner.commitTransaction();
+
+      return response;
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
+  async createBookingDirectly(
+    user: JwtPayloadType,
+    createBookingDto: CreateBookingDto,
+  ): Promise<Booking> {
+    const newBooking = await this.createBooking(
+      user,
+      createBookingDto,
+      BookingType.DIRECTLY,
+    );
 
     return this.bookingRepository.save(newBooking);
   }
@@ -277,31 +354,35 @@ export class BookingService {
 
   private async checkConflictBookingTime(
     roomId: string,
+    totalRoom: number,
     dateFrom: Date,
     dateTo: Date,
   ): Promise<boolean> {
-    return this.bookingRepository
-      .createQueryBuilder('b')
-      .where('b.roomId = :roomId', { roomId })
-      .where('b.status != :bookingStatus', {
-        bookingStatus: BookingStatus.CANCEL,
-      })
-      .andWhere(
-        new Brackets((qb) =>
-          qb
-            .where('b.dateFrom <= :dateFrom and b.dateTo > :dateFrom', {
-              dateFrom,
-            })
-            .orWhere('b.dateFrom < :dateTo and b.dateTo >= :dateTo', {
-              dateTo,
-            })
-            .orWhere('b.dateFrom > :dateFrom and b.dateTo < :dateTo', {
-              dateFrom,
-              dateTo,
-            }),
-        ),
-      )
-      .getExists();
+    return (
+      totalRoom <=
+      (await this.bookingRepository
+        .createQueryBuilder('b')
+        .where('b.roomId = :roomId', { roomId })
+        .andWhere('b.status != :bookingStatus', {
+          bookingStatus: BookingStatus.CANCEL,
+        })
+        .andWhere(
+          new Brackets((qb) =>
+            qb
+              .where('b.dateFrom <= :dateFrom and b.dateTo > :dateFrom', {
+                dateFrom,
+              })
+              .orWhere('b.dateFrom < :dateTo and b.dateTo >= :dateTo', {
+                dateTo,
+              })
+              .orWhere('b.dateFrom > :dateFrom and b.dateTo < :dateTo', {
+                dateFrom,
+                dateTo,
+              }),
+          ),
+        )
+        .getCount())
+    );
   }
 
   private getFindManyOption(

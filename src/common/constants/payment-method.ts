@@ -4,4 +4,5 @@ export enum PaymentMethod {
   CREDIT_CARD,
   DEBIT_CARD,
   PAYPAL,
+  VN_PAY,
 }

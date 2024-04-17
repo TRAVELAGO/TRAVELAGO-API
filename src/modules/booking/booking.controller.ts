@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Get,
+  Ip,
   Param,
   Patch,
   Post,
@@ -21,7 +22,7 @@ import { Roles } from '@decorators/roles.decorator';
 import { BookingStatus } from '@constants/booking-status';
 import { PageDto } from 'src/common/dtos/page.dto';
 import { SearchBookingDto } from './dtos/search-booking.dto';
-import { BookingType } from '@constants/booking-type';
+import { CreateBookingResponseDto } from './dtos/create-booking-response.dto';
 
 @ApiTags('Bookings')
 @Controller('bookings')
@@ -51,20 +52,17 @@ export class BookingController {
     return this.bookingService.search(user, searchBookingDto);
   }
 
-  @Post()
+  @Post('online')
   @ApiResponse({ status: 201, description: 'Create booking successfully.' })
   @ApiResponse({ status: 400, description: 'Validation failure.' })
   @ApiResponse({ status: 409, description: 'Conflict booking time.' })
   @Roles(RoleType.USER)
   async bookingOnline(
     @GetJwtPayload() user: JwtPayloadType,
+    @Ip() ip,
     @Body() createBookingDto: CreateBookingDto,
-  ): Promise<Booking> {
-    return this.bookingService.create(
-      user,
-      createBookingDto,
-      BookingType.ONLINE,
-    );
+  ): Promise<CreateBookingResponseDto> {
+    return this.bookingService.createBookingOnline(user, createBookingDto, ip);
   }
 
   @Post('directly')
@@ -76,11 +74,7 @@ export class BookingController {
     @GetJwtPayload() user: JwtPayloadType,
     @Body() createBookingDto: CreateBookingDto,
   ): Promise<Booking> {
-    return this.bookingService.create(
-      user,
-      createBookingDto,
-      BookingType.DIRECTLY,
-    );
+    return this.bookingService.createBookingDirectly(user, createBookingDto);
   }
 
   @Patch(':id/check-in')

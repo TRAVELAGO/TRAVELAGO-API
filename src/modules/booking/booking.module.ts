@@ -5,10 +5,13 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { Booking } from './booking.entity';
 import { RoomModule } from '@modules/room/room.module';
 import { JwtStrategy } from '@modules/auth/strategies/jwt.strategy';
+import { VNPayService } from '@shared/services/vnpay.services';
+import { RedisService } from '@shared/services/redis.service';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Booking]), RoomModule],
   controllers: [BookingController],
-  providers: [BookingService, JwtStrategy],
+  providers: [BookingService, VNPayService, JwtStrategy, RedisService],
+  exports: [TypeOrmModule],
 })
 export class BookingModule {}

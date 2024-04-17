@@ -25,7 +25,8 @@
       "@constants/*": ["src/common/constants/*"],
       "@database/*": ["src/database/*"],
       "@interfaces/*": ["src/common/interfaces/*"],
-      "@decorators/*": ["src/common/decorators/*"]
+      "@decorators/*": ["src/common/decorators/*"],
+      "@shared/*": ["src/shared/*"]
     },
   }
 }

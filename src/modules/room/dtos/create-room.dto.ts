@@ -19,21 +19,23 @@ export class CreateRoomDto {
   readonly name: string;
 
   @ApiProperty({
-    minimum: 1,
+    minimum: 5000,
     default: 1000000,
   })
   @IsNotEmpty()
   @Type(() => Number) // convert string to number (multipart/form-data)
   @IsNumber()
-  @Min(1)
+  @Min(5000)
   readonly price: number;
 
   @ApiPropertyOptional({
-    default: 150000,
+    minimum: 0,
+    default: 0,
   })
   @Type(() => Number)
   @IsNumber()
   @IsOptional()
+  @Min(0)
   readonly discount: number;
 
   @ApiProperty({
@@ -63,7 +65,7 @@ export class CreateRoomDto {
   @ApiPropertyOptional()
   @IsArray()
   @IsOptional()
-  readonly roomAmenities: number[];
+  readonly roomAmenities: string[] = [];
 
   @ApiProperty()
   @IsNotEmpty()
