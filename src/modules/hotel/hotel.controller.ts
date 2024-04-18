@@ -67,7 +67,7 @@ export class HotelController {
         description: { type: 'string' },
         status: { type: 'number', default: HotelStatus.OPEN },
         checkInTime: { type: 'string', default: '14:00:00' },
-        checkOutTime: { type: 'string', default: '14:00:00' },
+        checkOutTime: { type: 'string', default: '12:00:00' },
         longitude: { type: 'string' },
         latitude: { type: 'string' },
         images: {

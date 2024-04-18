@@ -1,7 +1,7 @@
 import { VN_TIME_ZONE } from '@constants/constants';
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
-import { IsDate, IsNotEmpty } from 'class-validator';
+import { IsDate, IsNotEmpty, IsOptional } from 'class-validator';
 import { fromZonedTime } from 'date-fns-tz';
 
 export class CreateBookingDto {
@@ -22,4 +22,8 @@ export class CreateBookingDto {
   @ApiProperty()
   @IsNotEmpty()
   readonly roomId: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  readonly voucherId?: string;
 }

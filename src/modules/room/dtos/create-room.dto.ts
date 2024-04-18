@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { Type } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 import {
   IsArray,
   IsNotEmpty,
@@ -63,6 +63,7 @@ export class CreateRoomDto {
   readonly area: number;
 
   @ApiPropertyOptional()
+  @Transform(({ value }) => value && value.split(','))
   @IsArray()
   @IsOptional()
   readonly roomAmenities: string[] = [];
