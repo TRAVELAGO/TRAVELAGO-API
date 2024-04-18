@@ -18,7 +18,7 @@ export class City {
   @Index({ fulltext: true })
   name: string;
 
-  @Column({ length: 10 })
+  @Column({ length: 100 })
   @Index({ unique: true })
   postalCode: string;
 

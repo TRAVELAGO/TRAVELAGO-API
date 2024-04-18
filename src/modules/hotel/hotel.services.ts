@@ -54,4 +54,8 @@ export class HotelService {
       return await this.hotelRepository.save(createdHotel);
     }
   }
+
+  async findHotelsByCity(cityid: string): Promise<Hotel[]> {
+    return this.hotelRepository.find({ where: { city: { id: cityid } } });
+  }
 }

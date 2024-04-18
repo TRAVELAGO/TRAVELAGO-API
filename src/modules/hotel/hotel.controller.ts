@@ -45,4 +45,9 @@ export class HotelController {
     console.log('create hotel api');
     return this.hotelService.createHotel(hotelDto);
   }
+
+  @Get('/search/:cityid')
+  async findByCity(@Param('cityid') cityid: string): Promise<Hotel[]> {
+    return this.hotelService.findHotelsByCity(cityid);
+  }
 }

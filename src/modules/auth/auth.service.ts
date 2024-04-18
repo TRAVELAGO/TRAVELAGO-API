@@ -88,8 +88,9 @@ export class AuthService {
     }
   }
 
-  async registerHotel(registerHotelDto: RegisterHotelDto): Promise<Partial<User>> {
-
+  async registerHotel(
+    registerHotelDto: RegisterHotelDto,
+  ): Promise<Partial<User>> {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
@@ -124,14 +125,12 @@ export class AuthService {
 
       await queryRunner.manager.save(newUser);
 
-      
       const newHotel = this.hotelRepository.create({
         user: newUser,
         name: registerHotelDto?.hotelName,
         images: [],
       });
       await queryRunner.manager.save(newHotel);
-      
 
       await queryRunner.commitTransaction();
 
