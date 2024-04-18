@@ -37,12 +37,15 @@ import { VNPayService } from '@shared/services/vnpay.services';
 import { REDIS_HASH_BOOKING_KEY, MAX_PAYMENT_TIME } from '@constants/constants';
 import { Cache } from 'cache-manager';
 import { RedisService } from '@shared/services/redis.service';
+import { Voucher } from '@modules/voucher/voucher.entity';
+import { VoucherType } from '@constants/voucher-type';
 
 @Injectable()
 export class BookingService {
   constructor(
     @InjectRepository(Booking) private bookingRepository: Repository<Booking>,
     @InjectRepository(Room) private roomRepository: Repository<Room>,
+    @InjectRepository(Voucher) private voucherRepository: Repository<Voucher>,
     private dataSource: DataSource,
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
     private redisService: RedisService,
@@ -194,8 +197,8 @@ export class BookingService {
             id: user.id,
           }
         : undefined,
-      totalAmount: existedRoom.price,
-      totalDiscount: existedRoom.discount,
+      totalAmount: existedRoom.price - existedRoom.discount,
+      totalDiscount: 0,
       status: isHotelRole ? BookingStatus.CHECK_IN : BookingStatus.NEW,
       type: isHotelRole ? BookingType.DIRECTLY : BookingType.ONLINE,
       dateFrom,
@@ -220,7 +223,46 @@ export class BookingService {
         createBookingDto,
         BookingType.ONLINE,
       );
-      // TO: chạy cron job lấy các cache match *:payment.
+
+      if (createBookingDto.voucherId) {
+        const existedVoucher = await this.voucherRepository.findOne({
+          where: {
+            id: createBookingDto.voucherId,
+          },
+          relations: ['hotel'],
+        });
+
+        if (!existedVoucher) {
+          throw new BadRequestException('Voucher does not exist.');
+        }
+
+        if (
+          existedVoucher.quantity <= 0 ||
+          existedVoucher.expiredDate < new Date() ||
+          (existedVoucher.type === VoucherType.ONLY_HOTEL &&
+            existedVoucher.hotel.id !== newBooking.room.hotel.id) ||
+          (existedVoucher.minimumAmount &&
+            existedVoucher.minimumAmount > newBooking.totalAmount)
+        ) {
+          throw new BadRequestException('Voucher cannot be applied.');
+        }
+
+        newBooking.totalDiscount = Math.floor(
+          existedVoucher.discountPercentage
+            ? Math.min(
+                (existedVoucher.discountPercentage / 100) *
+                  newBooking.totalAmount,
+                existedVoucher.maximumDiscount,
+              )
+            : existedVoucher.maximumDiscount,
+        );
+
+        newBooking.voucher = existedVoucher;
+        --existedVoucher.quantity;
+
+        await queryRunner.manager.save(existedVoucher);
+      }
+
       await queryRunner.manager.save(newBooking);
 
       const paymentUrl = this.vnPayService.getVNPayUrl(

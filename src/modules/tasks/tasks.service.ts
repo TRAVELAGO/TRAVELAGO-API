@@ -1,11 +1,12 @@
 import { BookingStatus } from '@constants/booking-status';
 import { REDIS_HASH_BOOKING_KEY } from '@constants/constants';
 import { Booking } from '@modules/booking/booking.entity';
+import { Voucher } from '@modules/voucher/voucher.entity';
 import { Injectable, Logger } from '@nestjs/common';
 import { Interval } from '@nestjs/schedule';
 import { InjectRepository } from '@nestjs/typeorm';
 import { RedisService } from '@shared/services/redis.service';
-import { In, Repository } from 'typeorm';
+import { DataSource, In, Repository } from 'typeorm';
 
 @Injectable()
 export class TasksService {
@@ -14,6 +15,7 @@ export class TasksService {
   constructor(
     private redisService: RedisService,
     @InjectRepository(Booking) private bookingRepository: Repository<Booking>,
+    private dataSource: DataSource,
   ) {}
 
   @Interval(2 * 60 * 1000)
@@ -39,16 +41,52 @@ export class TasksService {
           id: In(expiredBookingIds),
           status: BookingStatus.NEW,
         },
+        relations: {
+          voucher: true,
+        },
       });
 
-      for (let i = 0; i < expiredBookings.length; i++) {
-        expiredBookings[i].status = BookingStatus.CANCEL;
+      const vouchers: Voucher[] = [];
+
+      expiredBookings.forEach((expiredBooking) => {
+        expiredBooking.status = BookingStatus.CANCEL;
+
+        if (expiredBooking.voucher) {
+          let isAddVoucher = true;
+
+          for (const voucher of vouchers) {
+            if (voucher.id === expiredBooking.voucher.id) {
+              ++voucher.quantity;
+              isAddVoucher = false;
+              break;
+            }
+          }
+
+          if (isAddVoucher) {
+            ++expiredBooking.voucher.quantity;
+            vouchers.push(expiredBooking.voucher);
+          }
+        }
+      });
+
+      const queryRunner = this.dataSource.createQueryRunner();
+      await queryRunner.connect();
+      await queryRunner.startTransaction();
+
+      try {
+        await queryRunner.manager.save(expiredBookings);
+        await queryRunner.manager.save(vouchers);
+
+        await queryRunner.commitTransaction();
+
+        // delete cache
+        this.redisService.hDel(REDIS_HASH_BOOKING_KEY, ...expiredBookingIds);
+      } catch (error) {
+        this.logger.debug(error);
+        await queryRunner.rollbackTransaction();
+      } finally {
+        await queryRunner.release();
       }
-
-      await this.bookingRepository.save(expiredBookings);
-
-      // delete cache
-      this.redisService.hDel(REDIS_HASH_BOOKING_KEY, ...expiredBookingIds);
     }
 
     this.logger.debug(

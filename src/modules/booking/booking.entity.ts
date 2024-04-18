@@ -4,6 +4,7 @@ import { Hotel } from '@modules/hotel/hotel.entity';
 import { Payment } from '@modules/payment/payment.entity';
 import { Room } from '@modules/room/room.entity';
 import { User } from '@modules/user/user.entity';
+import { Voucher } from '@modules/voucher/voucher.entity';
 import {
   Entity,
   Column,
@@ -37,6 +38,10 @@ export class Booking {
 
   @Column({ type: 'decimal', precision: 10, scale: 2 })
   totalDiscount: number;
+
+  @ManyToOne(() => Voucher)
+  @JoinColumn({ name: 'voucherId' })
+  voucher: Voucher;
 
   @CreateDateColumn({ type: 'timestamp' })
   createdAt: Date;
