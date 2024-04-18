@@ -11,5 +11,6 @@ import { HotelModule } from '@modules/hotel/hotel.module';
   imports: [TypeOrmModule.forFeature([Room]), RoomTypeModule, HotelModule],
   controllers: [RoomController],
   providers: [RoomService, JwtStrategy],
+  exports: [RoomService, TypeOrmModule],
 })
 export class RoomModule {}

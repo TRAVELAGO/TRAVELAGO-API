@@ -9,7 +9,6 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
-import { LoginDto } from './dtos/login.dto';
 import { User } from '@modules/user/user.entity';
 import { RegisterDto } from './dtos/register.dto';
 import { JwtService } from '@nestjs/jwt';
@@ -18,6 +17,7 @@ import { LoginResponse, Token } from './strategies/types/login.type';
 import { RoleType } from '@constants/role-type';
 import { generateRandomOTP, generateRandomString } from '../../utils/random';
 import { RegisterHotelDto } from './dtos/registerHotel.dto';
+import { LoginDto } from '@modules/admin/dtos/login.dto';
 // import { sendMail } from 'src/utils/sendmail';
 
 @Injectable()
@@ -67,16 +67,6 @@ export class AuthService {
       });
 
       await queryRunner.manager.save(newUser);
-
-      if (newUser.role === RoleType.HOTEL) {
-        const newHotel = this.hotelRepository.create({
-          user: newUser,
-          name: registerDto?.hotelName,
-          images: [],
-        });
-        await queryRunner.manager.save(newHotel);
-      }
-
       await queryRunner.commitTransaction();
 
       return newUser;
@@ -166,7 +156,20 @@ export class AuthService {
       role: user.role,
     };
 
-    return { ...(await this.generateToken(jwtPayload)), user };
+    const response: LoginResponse = {
+      ...(await this.generateToken(jwtPayload)),
+      user,
+    };
+
+    if (user.role === RoleType.HOTEL) {
+      response.hotel = await this.hotelRepository.find({
+        where: {
+          user: { id: user.id },
+        },
+      });
+    }
+
+    return response;
   }
 
   async refreshToken(payload: JwtPayloadType): Promise<Token> {
@@ -215,7 +218,7 @@ export class AuthService {
 
   async generateToken(payload: JwtPayloadType): Promise<Token> {
     const accessToken = await this.jwtService.signAsync(payload, {
-      expiresIn: '1h',
+      expiresIn: '3h',
     });
     const refreshToken = await this.jwtService.signAsync(payload, {
       secret: this.configService.get<string>('JWT_SECRET_RT_KEY'),

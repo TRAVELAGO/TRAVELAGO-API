@@ -56,7 +56,7 @@ export class RoomTypeService {
   async delete(roomTypeId: string): Promise<void> {
     const deletedRoomType = await this.roomTypeRepository.delete(roomTypeId);
     if (!deletedRoomType.affected) {
-      throw new NotFoundException('Room not found.');
+      throw new NotFoundException('Room type not found.');
     }
   }
 }

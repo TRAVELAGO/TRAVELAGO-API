@@ -1,4 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { Transform, Type } from 'class-transformer';
 import {
   IsArray,
   IsNotEmpty,
@@ -18,30 +19,30 @@ export class CreateRoomDto {
   readonly name: string;
 
   @ApiProperty({
-    minimum: 1,
+    minimum: 5000,
     default: 1000000,
   })
   @IsNotEmpty()
+  @Type(() => Number) // convert string to number (multipart/form-data)
   @IsNumber()
-  @Min(1)
+  @Min(5000)
   readonly price: number;
 
   @ApiPropertyOptional({
-    default: 150000,
+    minimum: 0,
+    default: 0,
   })
+  @Type(() => Number)
   @IsNumber()
   @IsOptional()
+  @Min(0)
   readonly discount: number;
-
-  @ApiPropertyOptional()
-  @IsArray()
-  @IsOptional()
-  readonly images: string[];
 
   @ApiProperty({
     minimum: 1,
     default: 3,
   })
+  @Type(() => Number)
   @IsNumber()
   @Min(1)
   readonly total: number;
@@ -55,15 +56,17 @@ export class CreateRoomDto {
     minimum: 1,
     default: 30,
   })
+  @Type(() => Number)
   @IsNumber()
   @IsOptional()
   @Min(1)
   readonly area: number;
 
   @ApiPropertyOptional()
+  @Transform(({ value }) => value && value.split(','))
   @IsArray()
   @IsOptional()
-  readonly roomAmenities: number[];
+  readonly roomAmenities: string[] = [];
 
   @ApiProperty()
   @IsNotEmpty()

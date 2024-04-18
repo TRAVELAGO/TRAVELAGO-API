@@ -7,9 +7,18 @@ import { AuthModule } from '@modules/auth/auth.module';
 import { HotelModule } from './modules/hotel/hotel.module';
 import { RoomModule } from '@modules/room/room.module';
 import { RoomTypeModule } from '@modules/room-type/room-type.module';
+import { AdminModule } from '@modules/admin/admin.module';
 import { PassportModule } from '@nestjs/passport';
-import { AmenityModule } from '@modules/amenity/amenity.module';
+import { CacheModule } from '@nestjs/cache-manager';
+import * as redisStore from 'cache-manager-redis-store';
+import { ClearCacheService } from './clear-cache.service';
+import { FilesModule } from '@modules/files/files.module';
+import { BookingModule } from '@modules/booking/booking.module';
+import { PaymentModule } from '@modules/payment/payment.module';
+import { ScheduleModule } from '@nestjs/schedule';
+import { TasksModule } from '@modules/tasks/tasks.module';
 import { CityModule } from '@modules/city/city.module';
+import { AmenityModule } from '@modules/amenity/amenity.module';
 
 @Module({
   imports: [
@@ -20,15 +29,31 @@ import { CityModule } from '@modules/city/city.module';
       expandVariables: true,
     }),
     TypeOrmModule.forRoot(dataSourceOptions),
+    CacheModule.register({
+      isGlobal: true,
+      store: redisStore,
+      host: process.env.REDIS_URL ? undefined : process.env.REDIS_HOST,
+      port: process.env.REDIS_URL ? undefined : process.env.REDIS_PORT,
+      auth_pass: process.env.REDIS_URL
+        ? undefined
+        : process.env.REDIS_AUTH_PASS,
+      url: process.env.REDIS_URL,
+    }),
     PassportModule,
+    ScheduleModule.forRoot(),
+    TasksModule,
     AuthModule,
     UserModule,
     HotelModule,
     RoomModule,
     RoomTypeModule,
-    AmenityModule,
+    FilesModule,
+    AdminModule,
+    BookingModule,
+    PaymentModule,
     CityModule,
+    AmenityModule,
   ],
-  providers: [],
+  providers: [ClearCacheService],
 })
 export class AppModule {}

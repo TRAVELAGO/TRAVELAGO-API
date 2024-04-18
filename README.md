@@ -40,6 +40,22 @@ yarn run migration:generate src/database/migrations/<migration-name>
 yarn run migration:create src/database/migrations/<migration-name> 
 ```
 
+## Run Docker
+
+```bash
+# build image & run container
+$ docker compose up
+
+# rebuild image & run container
+$ docker compose up --build
+
+# stop container
+$ docker compose stop
+
+# start exited container
+$ docker compose start
+```
+
 ## Test
 
 ```bash

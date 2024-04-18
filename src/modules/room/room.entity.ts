@@ -1,7 +1,9 @@
+import { FileObject } from '../files/types/file-object';
 import { Booking } from '@modules/booking/booking.entity';
 import { Feedback } from '@modules/feedback/feedback.entity';
 import { Hotel } from '@modules/hotel/hotel.entity';
 import { RoomType } from '@modules/room-type/room-type.entity';
+import { formatFileObjects, getFileObjects } from 'src/utils/files';
 import {
   Entity,
   Column,
@@ -21,19 +23,24 @@ export class Room {
   @Column({ length: 100 })
   name: string;
 
-  @Column({ type: 'decimal', precision: 10, scale: 2 })
+  @Column({ type: 'numeric', precision: 10, scale: 2 })
   price: number;
 
-  @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })
+  @Column({ type: 'numeric', precision: 10, scale: 2, default: 0 })
   discount: number;
 
   @Column('json', {
     nullable: true,
+    transformer: {
+      to(value: FileObject[]): string[] {
+        return formatFileObjects(value);
+      },
+      from(value: string[]): FileObject[] {
+        return getFileObjects(value);
+      },
+    },
   })
-  images: string[];
-
-  @Column()
-  currentAvailable: number;
+  images: FileObject[];
 
   @Column()
   total: number;
@@ -50,7 +57,7 @@ export class Room {
   @Column('json', {
     nullable: true,
   })
-  roomAmenities: number[];
+  roomAmenities: string[];
 
   @CreateDateColumn({ type: 'timestamp' })
   createdAt: Date;

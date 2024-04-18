@@ -1,13 +1,23 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DeepPartial, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { Hotel } from '@modules/hotel/hotel.entity';
-import { HotelDto } from './dtos/hotelDto';
+import { HotelDto } from './dtos/hotel.dto';
+import { HotelStatus } from '@constants/hotel-status';
+import { UpdateHotelDto } from './dtos/update-hotel.dto';
+import { FilesService } from '@modules/files/files.service';
 
 @Injectable()
 export class HotelService {
   constructor(
     @InjectRepository(Hotel) private hotelRepository: Repository<Hotel>,
+    private filesService: FilesService,
   ) {}
 
   async findAll(): Promise<Hotel[]> {
@@ -15,46 +25,90 @@ export class HotelService {
   }
 
   async findOne(id: string): Promise<Hotel> {
-    return this.hotelRepository.findOne({
-      where: { id: id },
+    const existedHotel = await this.hotelRepository.findOne({
+      where: { id },
     });
+
+    if (!existedHotel) {
+      throw new NotFoundException('Hotel id does not exist.');
+    }
+
+    return existedHotel;
   }
 
-  async update(id: string, hotelData: Partial<Hotel>): Promise<Hotel> {
-    await this.hotelRepository.update(id, hotelData);
-    return this.findOne(id);
-  }
-
-  async remove(id: string): Promise<void> {
-    await this.hotelRepository.delete(id);
-  }
-
-  async createHotel(hotelDto: HotelDto): Promise<Hotel> {
-    const hotel = await this.hotelRepository.findOne({
+  async update(
+    id: string,
+    userId: string,
+    updateHotelDto: UpdateHotelDto,
+  ): Promise<Hotel> {
+    const existedHotel = await this.hotelRepository.findOne({
       where: {
-        name: hotelDto.name,
-        address: hotelDto.address,
+        id,
+      },
+      relations: ['user'],
+    });
+
+    if (!existedHotel) {
+      throw new NotFoundException('Hotel does not exists.');
+    }
+
+    if (existedHotel.user.id !== userId) {
+      throw new ForbiddenException();
+    }
+
+    this.hotelRepository.merge(existedHotel, updateHotelDto);
+
+    return this.hotelRepository.save(existedHotel);
+  }
+
+  async remove(id: string, userId: string): Promise<void> {
+    const hotelExists = await this.hotelRepository.exists({
+      where: {
+        id,
+        user: { id: userId },
       },
     });
 
-    if (hotel) {
-      throw new BadRequestException('The hotel already exists.');
-    } else {
-      // const newHotel = this.hotelRepository.create(hotelDto as unknown as DeepPartial<Hotel>);
+    if (!hotelExists) {
+      throw new ForbiddenException();
+    }
 
-      const newHotel: DeepPartial<Hotel> = {
-        name: hotelDto.name,
-        address: hotelDto.address,
-        description: hotelDto.description,
-        status: hotelDto.status,
-      };
+    const deletedHotel = await this.hotelRepository.delete(id);
 
-      const createdHotel = await this.hotelRepository.create(newHotel);
-
-      return await this.hotelRepository.save(createdHotel);
+    if (!deletedHotel.affected) {
+      throw new InternalServerErrorException();
     }
   }
 
+  async create(
+    userId: string,
+    images: any,
+    hotelDto: HotelDto,
+  ): Promise<Hotel> {
+    const hotelExists = await this.hotelRepository.exists({
+      where: {
+        name: hotelDto.name,
+        user: { id: userId },
+      },
+    });
+
+    if (hotelExists) {
+      throw new BadRequestException('The hotel already exists.');
+    }
+
+    const uploadedImages = images
+      ? await this.filesService.uploadFiles(images)
+      : [];
+
+    const createdHotel = await this.hotelRepository.create({
+      status: HotelStatus.OPEN,
+      ...hotelDto,
+      user: { id: userId },
+      images: uploadedImages,
+    });
+
+    return this.hotelRepository.save(createdHotel);
+  }
   async findHotelsByCity(cityid: string): Promise<Hotel[]> {
     return this.hotelRepository.find({ where: { city: { id: cityid } } });
   }

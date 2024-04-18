@@ -22,7 +22,7 @@ export class City {
   @Index({ unique: true })
   postalCode: string;
 
-  @ManyToOne(() => Country, (country) => country.cities)
+  @ManyToOne(() => Country, (country) => country.cities, { eager: true })
   country: Country;
 
   @OneToMany(() => Hotel, (hotel) => hotel.city)
