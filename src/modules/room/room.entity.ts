@@ -23,10 +23,10 @@ export class Room {
   @Column({ length: 100 })
   name: string;
 
-  @Column({ type: 'double' })
+  @Column({ type: 'numeric', precision: 10, scale: 2 })
   price: number;
 
-  @Column({ type: 'double' })
+  @Column({ type: 'numeric', precision: 10, scale: 2, default: 0 })
   discount: number;
 
   @Column('json', {
