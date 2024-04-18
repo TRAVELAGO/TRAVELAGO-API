@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Param,
   Post,
   Req,
   UseGuards,
@@ -18,6 +19,8 @@ import { GetJwtPayload } from '@decorators/get-jwt-payload.decorator';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { Request } from 'express';
 import { JwtPayloadType } from './strategies/types/jwt-payload.type';
+import { fogetPasswordDto } from './dtos/forgetPass.dto';
+import { Otpdto } from './dtos/Otp.dto';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -56,17 +59,15 @@ export class AuthController {
   }
 
   @Post('fogetPassword')
-  async forgetPassWord(@Body() email: string): Promise<void> {
-    return this.authService.forgetPassword(email);
+  async forgetPassWord(@Body() user: fogetPasswordDto): Promise<void> {
+    return this.authService.forgetPassword(user.email);
   }
 
-  @UseGuards(JwtAuthGuard)
-  @Post('checkCodeOtp')
+  @Post(':id/checkCodeOtp')
   async checkCodeOtp(
-    @Req() req: Request,
-    @Body() codeOtp: string,
+    @Param() id: string,
+    @Body() codeOtp: Otpdto,
   ): Promise<void> {
-    const userId = (req.user as any).id;
-    return this.authService.checkCodeOtp(userId, codeOtp);
+    return this.authService.checkCodeOtp(id, codeOtp.code);
   }
 }
