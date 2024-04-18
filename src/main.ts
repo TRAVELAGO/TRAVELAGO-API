@@ -24,6 +24,8 @@ async function bootstrap() {
       configService.get<string>('ADMIN_PAGE_URL'),
       configService.get<string>('LOCAL_URL'),
     ],
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+    credentials: true,
   });
 
   const options = new DocumentBuilder()
