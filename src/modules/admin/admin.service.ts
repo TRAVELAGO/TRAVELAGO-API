@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Not, Between, Equal } from 'typeorm';
+import * as bcrypt from 'bcrypt';
 import { RoleType } from '@constants/role-type';
 import { User } from '@modules/user/user.entity';
 import { Hotel } from '@modules/hotel/hotel.entity';
@@ -19,7 +20,7 @@ export class AdminService {
     @InjectRepository(Hotel) private hotelRepository: Repository<Hotel>,
     @InjectRepository(Booking) private bookingRepository: Repository<Booking>,
     @InjectRepository(Payment) private paymentRepository: Repository<Payment>,
-  ) {}
+  ) { }
 
   async login(loginDto: LoginDto) {
     const { email, password } = loginDto;
@@ -30,11 +31,17 @@ export class AdminService {
 
     const admin = await this.userRepository.findOne({ where: { email } });
 
-    if (!admin || admin.password !== password) {
-      throw new UnauthorizedException('Invalid email or password');
+    if (!admin) {
+      throw new UnauthorizedException('Invalid email');
     }
+
     if (admin.role != RoleType.ADMIN) {
       throw new UnauthorizedException('Access denied');
+    }
+
+    const checkPass = bcrypt.compareSync(password, admin.password);
+    if (!checkPass) {
+      throw new UnauthorizedException('Password is not correct.');
     }
 
     return { status: true };
