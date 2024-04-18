@@ -109,7 +109,7 @@ export class HotelService {
 
     return this.hotelRepository.save(createdHotel);
   }
-  async findHotelsByCity(cityid: string): Promise<Hotel[]> {
-    return this.hotelRepository.find({ where: { city: { id: cityid } } });
+  async findHotelsByCity(cityId: string): Promise<Hotel[]> {
+    return this.hotelRepository.find({ where: { city: { id: cityId } } });
   }
 }

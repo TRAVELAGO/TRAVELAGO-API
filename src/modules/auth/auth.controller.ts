@@ -17,6 +17,7 @@ import { LoginResponse } from './strategies/types/login.type';
 import { GetJwtPayload } from '@decorators/get-jwt-payload.decorator';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { Request } from 'express';
+import { JwtPayloadType } from './strategies/types/jwt-payload.type';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -50,17 +51,12 @@ export class AuthController {
 
   @Post('logout')
   @UseGuards(JwtAuthGuard)
-  async logout(@Req() req: Request): Promise<void> {
-    const userId = (req.user as any).id;
-    const accessToken = req.headers.authorization?.split(' ')[1]; // Extract access token from request headers
-    console.log(userId + '\n' + accessToken + '\n');
-
-    // Call the logout method from the AuthService
-    return this.authService.logout(userId, accessToken);
+  async logout(@GetJwtPayload() user: JwtPayloadType): Promise<void> {
+    return this.authService.logout(user);
   }
 
   @Post('fogetPassword')
-  async forgetPassWord(email: string): Promise<void> {
+  async forgetPassWord(@Body() email: string): Promise<void> {
     return this.authService.forgetPassword(email);
   }
 

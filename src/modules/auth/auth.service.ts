@@ -4,6 +4,7 @@ import {
   BadRequestException,
   HttpException,
   HttpStatus,
+  Inject,
   Injectable,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -18,7 +19,10 @@ import { RoleType } from '@constants/role-type';
 import { generateRandomOTP, generateRandomString } from '../../utils/random';
 import { RegisterHotelDto } from './dtos/registerHotel.dto';
 import { LoginDto } from '@modules/admin/dtos/login.dto';
-// import { sendMail } from 'src/utils/sendmail';
+// import { sendMail } from 'src/utils/sendMail';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { Cache } from 'cache-manager';
+// import { TypeSubjectEmail } from '@constants/mail';
 
 @Injectable()
 export class AuthService {
@@ -28,6 +32,7 @@ export class AuthService {
     private dataSource: DataSource,
     private jwtService: JwtService,
     private configService: ConfigService,
+    @Inject(CACHE_MANAGER) private cacheManager: Cache,
   ) {}
 
   async register(registerDto: RegisterDto): Promise<Partial<User>> {
@@ -180,28 +185,18 @@ export class AuthService {
     });
   }
 
-  async logout(id: string, accessToken: string): Promise<void> {
-    const user = await this.userRepository.findOne({
-      where: { id: id },
+  async logout(user: JwtPayloadType): Promise<void> {
+    const existUser = await this.userRepository.findOne({
+      where: { id: user.id },
     });
 
-    if (!user) {
+    if (!existUser) {
       throw new HttpException('User is not exist.', HttpStatus.UNAUTHORIZED);
     }
 
-    console.log('ACVV' + user.refreshToken);
+    existUser.refreshToken = null;
 
-    if (accessToken !== user.accessToken) {
-      throw new HttpException(
-        'ACCESS_TOKEN_NOT_EXIST_IN_DATA.',
-        HttpStatus.UNAUTHORIZED,
-      );
-    } else {
-      await this.userRepository.update(id, {
-        accessToken: '',
-        refreshToken: '',
-      });
-    }
+    await this.userRepository.save(existUser);
   }
 
   async checkRefreshToken(
@@ -240,53 +235,43 @@ export class AuthService {
     return hash;
   }
 
-  async forgetPassword(email: string): Promise<void> {
-    const user = this.userRepository.findOne({
-      where: { email: email },
+  async forgetPassword(userEmail: string): Promise<void> {
+    // const codeOtp = generateRandomOTP();
+    // sendMail(
+    //   'dovanbang14082002@gmail.com',
+    //   TypeSubjectEmail.FORGETPASS,
+    //   codeOtp,
+    // );
+    const user = await this.userRepository.findOne({
+      where: { email: userEmail },
     });
-
+    console.log(userEmail);
+    // console.log(user.id);
     if (!user) {
-      throw new HttpException('Email is noy correct', HttpStatus.BAD_REQUEST);
-    } else {
-      // const id = (await user).id;
-      // const email = (await user).email;
-      // const role = (await user).role;
-      // const jwtPayload: JwtPayloadType = {
-      //   id: id,
-      //   email: email,
-      //   role: role,
-      // };
-      // const accessToken = (await this.generateToken(jwtPayload)).accessToken;
-      // const refreshToken = (await this.generateToken(jwtPayload)).refreshToken;
-
-      // this.userRepository.update({email}, {accessToken: accessToken, refreshToken});
-
-      const codeOtp = generateRandomOTP();
-      await this.userRepository.update({ email }, { codeOtp: codeOtp });
-
-      //send mail with code
-
-      // sendMail(email, 'CodeOtp', codeOtp);
+      throw new HttpException('User is not exist.', HttpStatus.UNAUTHORIZED);
     }
+    const codeOtp = generateRandomOTP();
+    // sendMail(userEmail, TypeSubjectEmail.FORGETPASS, codeOtp);
+    this.cacheManager.set(userEmail, codeOtp, 10 * 60 * 1000);
+    console.log('succcess');
   }
 
   async checkCodeOtp(id: string, CodeOtp: string) {
+    const user = await this.userRepository.findOne({
+      where: { id: id },
+    });
+    const email = user.email;
     let checkcodeOtp: string | null = null;
-    // check database
     try {
-      checkcodeOtp = (await this.userRepository.findOne({ where: { id: id } }))
-        .codeOtp;
-    } catch (error) {}
+      checkcodeOtp = await this.cacheManager.get(email);
+    } catch (error) {
+      console.error('Error while getting code from cache:', error);
+    }
 
     if (checkcodeOtp === CodeOtp) {
-      // let currentTime = (new Date().getTime() + (7 * 60 * 60 * 1000));
-      // // console.log(currentTime)
-      // // console.log(verifyCode.timeExpired.getTime())
-      // if (currentTime > verifyCode.timeExpired.getTime()) {
-
-      // }
       const newPass = await this.hashPassword(generateRandomString(10));
       await this.userRepository.update({ id: id }, { password: newPass });
+      // sendMail(email, TypeSubjectEmail.VERIFIEDCODE, newPass);
     }
   }
 }
