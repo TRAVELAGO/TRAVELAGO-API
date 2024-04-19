@@ -22,6 +22,8 @@ import { LoginDto } from '@modules/admin/dtos/login.dto';
 // import { sendMail } from 'src/utils/sendMail';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
+import { TypeSubjectEmail } from '@constants/mail';
+import { sendMail } from 'src/utils/sendMail';
 // import { TypeSubjectEmail } from '@constants/mail';
 
 @Injectable()
@@ -251,7 +253,7 @@ export class AuthService {
       throw new HttpException('User is not exist.', HttpStatus.UNAUTHORIZED);
     }
     const codeOtp = generateRandomOTP();
-    // sendMail(userEmail, TypeSubjectEmail.FORGETPASS, codeOtp);
+    sendMail(userEmail, TypeSubjectEmail.FORGETPASS, codeOtp);
     this.cacheManager.set(userEmail, codeOtp, 10 * 60 * 1000);
     console.log('succcess');
   }
@@ -283,7 +285,7 @@ export class AuthService {
       console.log(newPass);
       await this.userRepository.update({ id: idValue }, { password: newPass });
       await this.cacheManager.del(email);
-      // sendMail(email, TypeSubjectEmail.VERIFIEDCODE, newPass);
+      sendMail(email, TypeSubjectEmail.VERIFIEDCODE, newPass);
     } else {
       throw new HttpException('Otp is not correct.', HttpStatus.UNAUTHORIZED);
     }
