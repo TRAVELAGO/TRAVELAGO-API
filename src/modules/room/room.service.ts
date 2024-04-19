@@ -216,4 +216,8 @@ export class RoomService {
       where: whereOptions,
     };
   }
+
+  async findRoomsByHotel(hotelId: string): Promise<Room[]> {
+    return this.roomRepository.find({ where: { hotel: { id: hotelId } } });
+  }
 }

@@ -17,6 +17,8 @@ import { BookingModule } from '@modules/booking/booking.module';
 import { PaymentModule } from '@modules/payment/payment.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { TasksModule } from '@modules/tasks/tasks.module';
+import { CityModule } from '@modules/city/city.module';
+import { AmenityModule } from '@modules/amenity/amenity.module';
 
 @Module({
   imports: [
@@ -49,6 +51,8 @@ import { TasksModule } from '@modules/tasks/tasks.module';
     AdminModule,
     BookingModule,
     PaymentModule,
+    CityModule,
+    AmenityModule,
   ],
   providers: [ClearCacheService],
 })

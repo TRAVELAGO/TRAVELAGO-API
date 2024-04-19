@@ -126,4 +126,9 @@ export class RoomController {
   ): Promise<void> {
     return this.roomService.delete(user.id, roomId);
   }
+
+  @Get('/hotel/:hotelId')
+  async findByHotel(@Param('hotelId') hotelId: string): Promise<Room[]> {
+    return this.roomService.findRoomsByHotel(hotelId);
+  }
 }

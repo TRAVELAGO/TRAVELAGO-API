@@ -95,4 +95,9 @@ export class HotelController {
   ): Promise<Hotel> {
     return this.hotelService.create(user.id, files.images, hotelDto);
   }
+
+  @Get('/search/:cityId')
+  async findByCity(@Param('cityId') cityId: string): Promise<Hotel[]> {
+    return this.hotelService.findHotelsByCity(cityId);
+  }
 }

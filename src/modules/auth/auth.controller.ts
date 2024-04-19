@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Param,
   Post,
   UseGuards,
   UsePipes,
@@ -14,6 +15,10 @@ import { RegisterDto } from './dtos/register.dto';
 import { JwtRefreshGuard } from './guards/jwt-refresh.guard';
 import { LoginResponse } from './strategies/types/login.type';
 import { GetJwtPayload } from '@decorators/get-jwt-payload.decorator';
+import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { JwtPayloadType } from './strategies/types/jwt-payload.type';
+import { fogetPasswordDto } from './dtos/forgetPass.dto';
+import { Otpdto } from './dtos/Otp.dto';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -23,6 +28,13 @@ export class AuthController {
   @Post('register')
   async register(@Body() registerDto: RegisterDto): Promise<Partial<User>> {
     return this.authService.register(registerDto);
+  }
+
+  @Post('registerHotel')
+  async registerHotel(
+    @Body() registerHotelDto: RegisterDto,
+  ): Promise<Partial<User>> {
+    return this.authService.registerHotel(registerHotelDto);
   }
 
   @Post('login')
@@ -36,5 +48,24 @@ export class AuthController {
   @UseGuards(JwtRefreshGuard)
   async refreshToken(@GetJwtPayload() user): Promise<any> {
     return this.authService.refreshToken(user);
+  }
+
+  @Post('logout')
+  @UseGuards(JwtAuthGuard)
+  async logout(@GetJwtPayload() user: JwtPayloadType): Promise<void> {
+    return this.authService.logout(user);
+  }
+
+  @Post('fogetPassword')
+  async forgetPassWord(@Body() user: fogetPasswordDto): Promise<void> {
+    return this.authService.forgetPassword(user.email);
+  }
+
+  @Post(':id/checkCodeOtp')
+  async checkCodeOtp(
+    @Param() id: string,
+    @Body() codeOtp: Otpdto,
+  ): Promise<void> {
+    return this.authService.checkCodeOtp(id, codeOtp.code);
   }
 }
