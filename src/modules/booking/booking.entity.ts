@@ -30,7 +30,7 @@ export class Booking {
   @Column({ type: 'timestamp' })
   dateFrom: Date;
 
-  @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
+  @Column({ type: 'timestamp' })
   dateTo: Date;
 
   @Column({ type: 'decimal', precision: 10, scale: 2 })

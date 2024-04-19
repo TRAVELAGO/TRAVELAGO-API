@@ -48,11 +48,4 @@ export class User {
 
   @UpdateDateColumn({ type: 'timestamp' })
   updatedAt: Date;
-
-  @Column({ nullable: true })
-  @Exclude({ toPlainOnly: true })
-  accessToken: string;
-
-  @Column({ nullable: true })
-  codeOtp: string;
 }

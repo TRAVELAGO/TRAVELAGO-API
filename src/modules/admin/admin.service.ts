@@ -20,7 +20,7 @@ export class AdminService {
     @InjectRepository(Hotel) private hotelRepository: Repository<Hotel>,
     @InjectRepository(Booking) private bookingRepository: Repository<Booking>,
     @InjectRepository(Payment) private paymentRepository: Repository<Payment>,
-  ) { }
+  ) {}
 
   async login(loginDto: LoginDto) {
     const { email, password } = loginDto;
