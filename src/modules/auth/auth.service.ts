@@ -258,31 +258,30 @@ export class AuthService {
   }
 
   async checkCodeOtp(id: any, CodeOtp: string) {
-   
     const idValue = id.id;
     const existedUser = await this.userRepository.findOne({
       where: { id: idValue },
     });
-    console.log(idValue)
+    console.log(idValue);
     if (!existedUser) {
       throw new HttpException('User is not exist.', HttpStatus.UNAUTHORIZED);
     }
     const email = existedUser.email;
-    console.log(email)
+    console.log(email);
     let checkcodeOtp: string | null = null;
     try {
       checkcodeOtp = await this.cacheManager.get(email);
-      console.log(checkcodeOtp)
-      if(checkcodeOtp === null) {
+      console.log(checkcodeOtp);
+      if (checkcodeOtp === null) {
         throw new HttpException('Otp has expired', HttpStatus.UNAUTHORIZED);
       }
     } catch (error) {
       console.error('Error while getting code from cache:', error);
     }
-    console.log(CodeOtp)
+    console.log(CodeOtp);
     if (checkcodeOtp === CodeOtp) {
       const newPass = await this.hashPassword(generateRandomString(10));
-      console.log(newPass)
+      console.log(newPass);
       await this.userRepository.update({ id: idValue }, { password: newPass });
       await this.cacheManager.del(email);
       // sendMail(email, TypeSubjectEmail.VERIFIEDCODE, newPass);

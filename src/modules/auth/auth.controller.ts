@@ -3,7 +3,6 @@ import {
   Controller,
   Param,
   Post,
-  Req,
   UseGuards,
   UsePipes,
   ValidationPipe,
@@ -17,7 +16,6 @@ import { JwtRefreshGuard } from './guards/jwt-refresh.guard';
 import { LoginResponse } from './strategies/types/login.type';
 import { GetJwtPayload } from '@decorators/get-jwt-payload.decorator';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
-import { Request } from 'express';
 import { JwtPayloadType } from './strategies/types/jwt-payload.type';
 import { fogetPasswordDto } from './dtos/forgetPass.dto';
 import { Otpdto } from './dtos/Otp.dto';
