@@ -222,7 +222,6 @@ export class AuthService {
 
     await this.userRepository.update(payload.id, {
       refreshToken: refreshToken,
-      accessToken: accessToken,
     });
     return { accessToken, refreshToken };
   }
