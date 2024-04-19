@@ -18,7 +18,15 @@ async function bootstrap() {
 
   app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)));
 
-  app.enableCors();
+  app.enableCors({
+    origin: [
+      configService.get<string>('CMS_URL'),
+      configService.get<string>('ADMIN_PAGE_URL'),
+      configService.get<string>('LOCAL_URL'),
+    ],
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+    credentials: true,
+  });
 
   const options = new DocumentBuilder()
     .setTitle('TRAVELAGO API')
