@@ -1,5 +1,6 @@
 import { RoleType } from '@constants/role-type';
 import { UserStatus } from '@constants/user-status';
+import { Feedback } from '@modules/feedback/feedback.entity';
 import { Exclude } from 'class-transformer';
 import {
   Entity,
@@ -7,6 +8,7 @@ import {
   PrimaryGeneratedColumn,
   CreateDateColumn,
   UpdateDateColumn,
+  OneToMany,
 } from 'typeorm';
 
 @Entity()
@@ -42,6 +44,9 @@ export class User {
   @Column({ nullable: true })
   @Exclude({ toPlainOnly: true })
   refreshToken: string;
+
+  @OneToMany(() => Feedback, (feedback) => feedback.room)
+  feedbacks: Feedback[];
 
   @CreateDateColumn({ type: 'timestamp' })
   createdAt: Date;

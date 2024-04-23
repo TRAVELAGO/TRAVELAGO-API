@@ -199,6 +199,7 @@ export class AuthService {
     existUser.refreshToken = null;
 
     await this.userRepository.save(existUser);
+    console.log("success")
   }
 
   async checkRefreshToken(

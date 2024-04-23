@@ -19,6 +19,7 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { TasksModule } from '@modules/tasks/tasks.module';
 import { CityModule } from '@modules/city/city.module';
 import { AmenityModule } from '@modules/amenity/amenity.module';
+import { FeedbackModule } from '@modules/feedback/feedback.module';
 
 @Module({
   imports: [
@@ -53,6 +54,7 @@ import { AmenityModule } from '@modules/amenity/amenity.module';
     PaymentModule,
     CityModule,
     AmenityModule,
+    FeedbackModule,
   ],
   providers: [ClearCacheService],
 })

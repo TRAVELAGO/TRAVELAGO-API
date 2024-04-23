@@ -4,6 +4,7 @@ import { JwtAuthGuard } from '@modules/auth/guards/jwt-auth.guard';
 import { UserService } from './user.service';
 import { User } from './user.entity';
 import { userInfoDto } from './dtos/userInfo.dto';
+import { changePasswordDto } from './dtos/changePass.dto';
 
 @ApiTags('User')
 @Controller('user')
@@ -23,8 +24,8 @@ export class userController {
   @UseGuards(JwtAuthGuard)
   changePassword(
     @Param('id') idUser: string,
-    @Body() { newpass, passConfirm }: { newpass: string; passConfirm: string },
+    @Body() changePass: changePasswordDto,
   ): Promise<User> {
-    return this.userService.changePassword(idUser, newpass, passConfirm);
+    return this.userService.changePassword(idUser, changePass);
   }
 }

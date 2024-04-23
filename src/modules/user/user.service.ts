@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { User } from './user.entity';
 import { userInfoDto } from './dtos/userInfo.dto';
 import * as bcrypt from 'bcrypt';
+import { changePasswordDto } from './dtos/changePass.dto';
 
 @Injectable()
 export class UserService {
@@ -33,8 +34,7 @@ export class UserService {
 
   async changePassword(
     idUser: string,
-    newpass: string,
-    passConfirm: string,
+    changePass: changePasswordDto
   ): Promise<any> {
     const user = await this.userRepository.findOne({
       where: { id: idUser },
@@ -42,12 +42,13 @@ export class UserService {
     if (!user) {
       throw new Error('User not found');
     } else {
-      if (newpass === passConfirm) {
-        const pass = await this.hashPassword(newpass);
+      if (changePass.newPassword === changePass.oldPassword) {
+        const pass = await this.hashPassword(changePass.confirmPassword);
         const checkPass = bcrypt.compareSync(pass, user.password);
         if (checkPass) {
           try {
-            await this.userRepository.update(idUser, { password: pass });
+            const newPassword = await this.hashPassword(changePass.newPassword);
+            await this.userRepository.update(idUser, { password: newPassword });
           } catch {
             throw new Error('Not connect Database');
           }

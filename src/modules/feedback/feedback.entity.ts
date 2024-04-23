@@ -1,3 +1,5 @@
+import { FeedbackStatus } from '@constants/feedback-status';
+import { RoleType } from '@constants/role-type';
 import { Room } from '@modules/room/room.entity';
 import { User } from '@modules/user/user.entity';
 import {
@@ -26,9 +28,16 @@ export class Feedback {
   @UpdateDateColumn({ type: 'timestamp' })
   updatedAt: Date;
 
-  @ManyToOne(() => User)
+  @Column({ type: 'text' })
+  status: FeedbackStatus;
+
+  @Column({ type: 'text' })
+  userSend: RoleType;
+
+  @ManyToOne(() => User, user => user.feedbacks)
   user: User;
 
   @ManyToOne(() => Room, (room) => room.feedbacks)
   room: Room;
+
 }
