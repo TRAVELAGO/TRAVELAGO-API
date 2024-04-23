@@ -12,6 +12,10 @@ import { Hotel } from '@modules/hotel/hotel.entity';
 import { Booking } from '@modules/booking/booking.entity';
 import { Payment } from '@modules/payment/payment.entity';
 import { LoginDto } from './dtos/login.dto';
+import { JwtService } from '@nestjs/jwt';
+import { JwtPayloadType } from './strategies/types/jwt-payload.type';
+import { Token } from './strategies/types/login.type';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class AdminService {
@@ -20,6 +24,8 @@ export class AdminService {
     @InjectRepository(Hotel) private hotelRepository: Repository<Hotel>,
     @InjectRepository(Booking) private bookingRepository: Repository<Booking>,
     @InjectRepository(Payment) private paymentRepository: Repository<Payment>,
+    private jwtService: JwtService,
+    private configService: ConfigService,
   ) {}
 
   async login(loginDto: LoginDto) {
@@ -44,7 +50,42 @@ export class AdminService {
       throw new UnauthorizedException('Password is not correct.');
     }
 
-    return { status: true };
+    const jwtPayload: JwtPayloadType = {
+      id: admin.id,
+      email: admin.email,
+      role: admin.role,
+    };
+
+    const {accessToken, refreshToken  } =  await this.generateToken(jwtPayload);
+
+    return { status: true, accessToken: accessToken, refreshToken: refreshToken};
+  }
+
+  async generateToken(payload: JwtPayloadType): Promise<Token> {
+    const accessToken = await this.jwtService.signAsync(payload, {
+      expiresIn: '3h',
+    });
+    const refreshToken = await this.jwtService.signAsync(payload, {
+      secret: this.configService.get<string>('JWT_SECRET_RT_KEY'),
+      expiresIn: '1d',
+    });
+
+    await this.userRepository.update(payload.id, {
+      refreshToken: refreshToken,
+    });
+    return { accessToken, refreshToken };
+  }
+
+  async checkRefreshToken(
+    userId: string,
+    refreshToken: string,
+  ): Promise<boolean> {
+    return this.userRepository.exists({
+      where: {
+        id: userId,
+        refreshToken,
+      },
+    });
   }
 
   async getHotelOwner() {
