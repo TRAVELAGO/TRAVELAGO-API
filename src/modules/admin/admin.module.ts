@@ -6,10 +6,24 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AdminController } from './admin.controller';
 import { AdminService } from './admin.service';
+import { JwtRefreshStrategy } from './strategies/refresh.strategy';
+import { JwtModule, JwtModuleOptions } from '@nestjs/jwt';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([User, Hotel, Booking, Payment])],
+  imports: [
+    JwtModule.registerAsync({
+      imports: [ConfigModule],
+      useFactory: async (
+        configService: ConfigService,
+      ): Promise<JwtModuleOptions> => ({
+        global: true,
+        secret: configService.get<string>('JWT_SECRET_KEY'),
+      }),
+      inject: [ConfigService],
+    }),
+    TypeOrmModule.forFeature([User, Hotel, Booking, Payment])],
   controllers: [AdminController],
-  providers: [AdminService],
+  providers: [AdminService, JwtRefreshStrategy],
 })
 export class AdminModule {}
