@@ -101,12 +101,12 @@ export class VoucherService {
   }
 
   async delete(user: JwtPayloadType, voucherId: string): Promise<void> {
-    const deletedVoucher = await this.voucherRepository.delete({
-      id: voucherId,
-      createdBy: isHotel(user) && {
-        id: user.id,
-      },
-    });
+    const conditions: any = { id: voucherId };
+    if (isHotel(user)) {
+      conditions.createdBy = { id: user.id };
+    }
+
+    const deletedVoucher = await this.voucherRepository.delete(conditions);
 
     if (!deletedVoucher.affected) {
       throw new NotFoundException('Voucher not found.');
