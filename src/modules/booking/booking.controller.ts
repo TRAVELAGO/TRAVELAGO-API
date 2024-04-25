@@ -22,7 +22,6 @@ import { Roles } from '@decorators/roles.decorator';
 import { BookingStatus } from '@constants/booking-status';
 import { PageDto } from 'src/common/dtos/page.dto';
 import { SearchBookingDto } from './dtos/search-booking.dto';
-import { CreateBookingResponseDto } from './dtos/create-booking-response.dto';
 
 @ApiTags('Bookings')
 @Controller('bookings')
@@ -61,7 +60,7 @@ export class BookingController {
     @GetJwtPayload() user: JwtPayloadType,
     @Ip() ip,
     @Body() createBookingDto: CreateBookingDto,
-  ): Promise<CreateBookingResponseDto> {
+  ): Promise<Booking> {
     return this.bookingService.createBookingOnline(user, createBookingDto, ip);
   }
 

@@ -39,6 +39,9 @@ export class Booking {
   @Column({ type: 'decimal', precision: 10, scale: 2 })
   totalDiscount: number;
 
+  @Column({ type: 'text', nullable: true })
+  paymentUrl: string;
+
   @ManyToOne(() => Voucher)
   @JoinColumn({ name: 'voucherId' })
   voucher: Voucher;

@@ -121,6 +121,7 @@ export class RoomService {
 
     newRoom.hotel = existedHotel;
     newRoom.roomType = existedRoomType;
+    newRoom.guestNumber = existedRoomType.guestNumber;
     newRoom.images = uploadedImages;
 
     return this.roomRepository.save(newRoom);

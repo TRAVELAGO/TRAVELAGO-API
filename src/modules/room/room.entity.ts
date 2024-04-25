@@ -59,6 +59,9 @@ export class Room {
   })
   roomAmenities: string[];
 
+  @Column({ type: 'int' })
+  guestNumber: number;
+
   @CreateDateColumn({ type: 'timestamp' })
   createdAt: Date;
 

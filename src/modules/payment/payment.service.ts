@@ -95,6 +95,7 @@ export class PaymentService {
 
     try {
       existedBooking.status = BookingStatus.PAID;
+      existedBooking.paymentUrl = null;
 
       await queryRunner.manager.save(existedBooking);
       await queryRunner.manager.save(newPayment);
