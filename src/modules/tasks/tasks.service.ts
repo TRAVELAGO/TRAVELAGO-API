@@ -50,6 +50,7 @@ export class TasksService {
 
       expiredBookings.forEach((expiredBooking) => {
         expiredBooking.status = BookingStatus.CANCEL;
+        expiredBooking.paymentUrl = null;
 
         if (expiredBooking.voucher) {
           let isAddVoucher = true;
