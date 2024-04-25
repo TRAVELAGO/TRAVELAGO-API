@@ -5,7 +5,7 @@ import { Voucher } from '@modules/voucher/voucher.entity';
 import { Injectable, Logger } from '@nestjs/common';
 import { Interval } from '@nestjs/schedule';
 import { InjectRepository } from '@nestjs/typeorm';
-import { RedisService } from '@shared/services/redis.service';
+import { RedisService } from '@modules/redis/redis.service';
 import { DataSource, In, Repository } from 'typeorm';
 
 @Injectable()

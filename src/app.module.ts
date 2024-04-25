@@ -19,6 +19,7 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { TasksModule } from '@modules/tasks/tasks.module';
 import { CityModule } from '@modules/city/city.module';
 import { AmenityModule } from '@modules/amenity/amenity.module';
+import { RedisModule } from '@modules/redis/redis.module';
 
 @Module({
   imports: [
@@ -42,6 +43,7 @@ import { AmenityModule } from '@modules/amenity/amenity.module';
     PassportModule,
     ScheduleModule.forRoot(),
     TasksModule,
+    RedisModule,
     AuthModule,
     UserModule,
     HotelModule,

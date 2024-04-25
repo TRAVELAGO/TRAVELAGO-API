@@ -10,6 +10,32 @@ export class RedisService {
     this.redisClient = this.cacheManager.store.getClient();
   }
 
+  async SADD(key: string, arg1: string | string[]): Promise<number> {
+    return new Promise<number>((resolve) => {
+      this.redisClient.SADD(key, arg1, (err, reply) => {
+        if (err) {
+          console.error(err);
+          throw new BadRequestException();
+        }
+        resolve(reply);
+      });
+    });
+  }
+
+  async SISMEMBER(key: string, member: string): Promise<boolean> {
+    const reply = await new Promise<number>((resolve) => {
+      this.redisClient.SISMEMBER(key, member, (err, reply) => {
+        if (err) {
+          console.error(err);
+          throw new BadRequestException();
+        }
+        resolve(reply);
+      });
+    });
+
+    return reply !== 0;
+  }
+
   async hSet(key: string, field: string, value: string): Promise<number> {
     return new Promise<number>((resolve) => {
       this.redisClient.HSET(key, field, value, (err, reply) => {
