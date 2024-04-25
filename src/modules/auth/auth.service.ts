@@ -24,6 +24,8 @@ import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
 import { TypeSubjectEmail } from '@constants/mail';
 import { sendMail } from 'src/utils/sendMail';
+import { RedisService } from '@modules/redis/redis.service';
+import { REDIS_BLACK_LIST_TOKEN_KEY } from '@constants/constants';
 // import { TypeSubjectEmail } from '@constants/mail';
 
 @Injectable()
@@ -35,6 +37,7 @@ export class AuthService {
     private jwtService: JwtService,
     private configService: ConfigService,
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
+    private redisService: RedisService,
   ) {}
 
   async register(registerDto: RegisterDto): Promise<Partial<User>> {
@@ -187,7 +190,9 @@ export class AuthService {
     });
   }
 
-  async logout(user: JwtPayloadType): Promise<void> {
+  async logout(user: JwtPayloadType, bearerToken: string): Promise<void> {
+    const jwtToken = bearerToken?.replace('Bearer', '')?.trim();
+
     const existUser = await this.userRepository.findOne({
       where: { id: user.id },
     });
@@ -199,6 +204,11 @@ export class AuthService {
     existUser.refreshToken = null;
 
     await this.userRepository.save(existUser);
+
+    await this.redisService.SADD(
+      `${REDIS_BLACK_LIST_TOKEN_KEY}|${existUser.id}`,
+      jwtToken,
+    );
   }
 
   async checkRefreshToken(
@@ -236,23 +246,16 @@ export class AuthService {
     return hash;
   }
 
-  async forgetPassword(userEmail: string): Promise<void> {
-    // const codeOtp = generateRandomOTP();
-    // sendMail(
-    //   'dovanbang14082002@gmail.com',
-    //   TypeSubjectEmail.FORGETPASS,
-    //   codeOtp,
-    // );
-
+  async forgotPassword(userEmail: string): Promise<void> {
     const isUser = await this.userRepository.findOne({
       where: { email: userEmail },
     });
-    console.log(userEmail);
-    // console.log(user.id);
+
     if (!isUser) {
       throw new HttpException('User is not exist.', HttpStatus.UNAUTHORIZED);
     }
     const codeOtp = generateRandomOTP();
+
     sendMail(userEmail, TypeSubjectEmail.FORGETPASS, codeOtp);
     this.cacheManager.set(userEmail, codeOtp, 10 * 60 * 1000);
     console.log('succcess');
@@ -263,7 +266,7 @@ export class AuthService {
     const existedUser = await this.userRepository.findOne({
       where: { id: idValue },
     });
-    console.log(idValue);
+
     if (!existedUser) {
       throw new HttpException('User is not exist.', HttpStatus.UNAUTHORIZED);
     }

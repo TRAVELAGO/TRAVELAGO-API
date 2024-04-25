@@ -6,6 +6,9 @@ import {
   UseGuards,
   UsePipes,
   ValidationPipe,
+  Headers,
+  HttpStatus,
+  HttpCode,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
@@ -17,7 +20,7 @@ import { LoginResponse } from './strategies/types/login.type';
 import { GetJwtPayload } from '@decorators/get-jwt-payload.decorator';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { JwtPayloadType } from './strategies/types/jwt-payload.type';
-import { fogetPasswordDto } from './dtos/forgetPass.dto';
+import { ForgotPasswordDto } from './dtos/forgot-password.dto';
 import { Otpdto } from './dtos/Otp.dto';
 
 @ApiTags('Auth')
@@ -51,14 +54,21 @@ export class AuthController {
   }
 
   @Post('logout')
+  @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
-  async logout(@GetJwtPayload() user: JwtPayloadType): Promise<void> {
-    return this.authService.logout(user);
+  @HttpCode(HttpStatus.OK)
+  async logout(
+    @GetJwtPayload() user: JwtPayloadType,
+    @Headers('Authorization') bearerToken: string,
+  ): Promise<void> {
+    return this.authService.logout(user, bearerToken);
   }
 
-  @Post('fogetPassword')
-  async forgetPassWord(@Body() user: fogetPasswordDto): Promise<void> {
-    return this.authService.forgetPassword(user.email);
+  @Post('forgot-password')
+  async forgotPassWord(
+    @Body() forgotPasswordDto: ForgotPasswordDto,
+  ): Promise<void> {
+    return this.authService.forgotPassword(forgotPasswordDto.email);
   }
 
   @Post(':id/checkCodeOtp')

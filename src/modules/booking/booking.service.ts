@@ -36,7 +36,7 @@ import { addMinutes } from 'date-fns';
 import { VNPayService } from '@shared/services/vnpay.services';
 import { REDIS_HASH_BOOKING_KEY, MAX_PAYMENT_TIME } from '@constants/constants';
 import { Cache } from 'cache-manager';
-import { RedisService } from '@shared/services/redis.service';
+import { RedisService } from '@modules/redis/redis.service';
 import { Voucher } from '@modules/voucher/voucher.entity';
 import { VoucherType } from '@constants/voucher-type';
 

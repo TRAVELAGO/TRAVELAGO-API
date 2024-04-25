@@ -12,7 +12,7 @@ import { PaymentMethod } from '@constants/payment-method';
 import { PaymentStatus } from '@constants/payment-status';
 import { getDateFromVNPDate } from 'src/utils/date';
 import { BookingStatus } from '@constants/booking-status';
-import { RedisService } from '@shared/services/redis.service';
+import { RedisService } from '@modules/redis/redis.service';
 import { REDIS_HASH_BOOKING_KEY } from '@constants/constants';
 
 export class PaymentService {
