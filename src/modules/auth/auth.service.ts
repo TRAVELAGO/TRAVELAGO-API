@@ -24,8 +24,7 @@ import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
 import { TypeSubjectEmail } from '@constants/mail';
 import { sendMail } from 'src/utils/sendMail';
-import { RedisService } from '@modules/redis/redis.service';
-import { REDIS_BLACK_LIST_TOKEN_KEY } from '@constants/constants';
+import { getBlacklistKey } from 'src/utils/cache';
 // import { TypeSubjectEmail } from '@constants/mail';
 
 @Injectable()
@@ -37,7 +36,6 @@ export class AuthService {
     private jwtService: JwtService,
     private configService: ConfigService,
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
-    private redisService: RedisService,
   ) {}
 
   async register(registerDto: RegisterDto): Promise<Partial<User>> {
@@ -190,11 +188,11 @@ export class AuthService {
     });
   }
 
-  async logout(user: JwtPayloadType, bearerToken: string): Promise<void> {
+  async logout(jwtPayload: JwtPayloadType, bearerToken: string): Promise<void> {
     const jwtToken = bearerToken?.replace('Bearer', '')?.trim();
 
     const existUser = await this.userRepository.findOne({
-      where: { id: user.id },
+      where: { id: jwtPayload.id },
     });
 
     if (!existUser) {
@@ -205,10 +203,9 @@ export class AuthService {
 
     await this.userRepository.save(existUser);
 
-    await this.redisService.SADD(
-      `${REDIS_BLACK_LIST_TOKEN_KEY}|${existUser.id}`,
-      jwtToken,
-    );
+    const ttl = Math.floor(Date.now()) - jwtPayload.exp * 1000;
+
+    await this.cacheManager.set(getBlacklistKey(jwtToken), jwtToken, ttl);
   }
 
   async checkRefreshToken(
@@ -236,6 +233,10 @@ export class AuthService {
       refreshToken: refreshToken,
     });
     return { accessToken, refreshToken };
+  }
+
+  private async getJwtTokenTtl(jwtToken: string) {
+    return await this.jwtService.decode(jwtToken);
   }
 
   private async hashPassword(password: string): Promise<string> {

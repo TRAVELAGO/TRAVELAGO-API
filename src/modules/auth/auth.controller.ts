@@ -58,10 +58,10 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.OK)
   async logout(
-    @GetJwtPayload() user: JwtPayloadType,
+    @GetJwtPayload() jwtPayload: JwtPayloadType,
     @Headers('Authorization') bearerToken: string,
   ): Promise<void> {
-    return this.authService.logout(user, bearerToken);
+    return this.authService.logout(jwtPayload, bearerToken);
   }
 
   @Post('forgot-password')
