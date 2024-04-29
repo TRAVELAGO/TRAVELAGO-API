@@ -1,16 +1,17 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { ConfigService } from '@nestjs/config';
 import { JwtPayloadType } from './types/jwt-payload.type';
-import { RedisService } from '@modules/redis/redis.service';
-import { REDIS_BLACK_LIST_TOKEN_KEY } from '@constants/constants';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { Cache } from 'cache-manager';
+import { getBlacklistKey } from 'src/utils/cache';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
   constructor(
     private configService: ConfigService,
-    private redisService: RedisService,
+    @Inject(CACHE_MANAGER) private cacheManager: Cache,
   ) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
@@ -27,12 +28,7 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
 
     const jwtToken = req?.get('authorization')?.replace('Bearer', '').trim();
 
-    if (
-      await this.redisService.SISMEMBER(
-        `${REDIS_BLACK_LIST_TOKEN_KEY}|${payload.id}`,
-        jwtToken,
-      )
-    ) {
+    if (await this.cacheManager.get(getBlacklistKey(jwtToken))) {
       throw new UnauthorizedException();
     }
 
