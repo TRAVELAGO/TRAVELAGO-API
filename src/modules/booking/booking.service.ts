@@ -31,7 +31,7 @@ import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { PageMetaDto } from 'src/common/dtos/page-meta.dto';
 import { BookingType } from '@constants/booking-type';
 import { Room } from '@modules/room/room.entity';
-import { addMinutes } from 'date-fns';
+import { addMinutes, differenceInCalendarDays } from 'date-fns';
 import { VNPayService } from '@shared/services/vnpay.services';
 import { REDIS_HASH_BOOKING_KEY, MAX_PAYMENT_TIME } from '@constants/constants';
 import { Cache } from 'cache-manager';
@@ -196,7 +196,12 @@ export class BookingService {
             id: user.id,
           }
         : undefined,
-      totalAmount: existedRoom.price - existedRoom.discount,
+      totalAmount:
+        differenceInCalendarDays(
+          createBookingDto.dateTo,
+          createBookingDto.dateFrom,
+        ) *
+        (existedRoom.price - existedRoom.discount),
       totalDiscount: 0,
       status: isHotelRole ? BookingStatus.CHECK_IN : BookingStatus.NEW,
       type: isHotelRole ? BookingType.DIRECTLY : BookingType.ONLINE,
