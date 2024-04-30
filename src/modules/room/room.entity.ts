@@ -45,7 +45,7 @@ export class Room {
   @Column()
   total: number;
 
-  @Column({ nullable: true })
+  @Column({ nullable: true, type: 'text' })
   description: string;
 
   @Column({ type: 'decimal', precision: 2, scale: 1, nullable: true })

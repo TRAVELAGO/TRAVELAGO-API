@@ -33,7 +33,7 @@ export class Voucher {
   @Column()
   type: VoucherType;
 
-  @Column({ nullable: true })
+  @Column({ nullable: true, type: 'text' })
   description: string;
 
   @Column({ type: 'timestamp' })

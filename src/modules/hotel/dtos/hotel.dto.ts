@@ -9,7 +9,7 @@ export class HotelDto {
   @IsNotEmpty()
   readonly name: string;
 
-  @ApiPropertyOptional()
+  @ApiProperty()
   @IsNotEmpty()
   readonly address: string;
 
@@ -50,4 +50,14 @@ export class HotelDto {
   @ApiPropertyOptional()
   @IsOptional()
   readonly latitude: string;
+
+  @ApiPropertyOptional({
+    type: 'array',
+    items: {
+      type: 'string',
+      format: 'binary',
+    },
+  })
+  @IsOptional()
+  images?: any[];
 }

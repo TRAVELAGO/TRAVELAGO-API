@@ -39,6 +39,7 @@ export class HotelService {
   async update(
     id: string,
     userId: string,
+    images: any[],
     updateHotelDto: UpdateHotelDto,
   ): Promise<Hotel> {
     const existedHotel = await this.hotelRepository.findOne({
@@ -56,7 +57,23 @@ export class HotelService {
       throw new ForbiddenException();
     }
 
+    const uploadedImages = images
+      ? await this.filesService.uploadFiles(images)
+      : [];
+
     this.hotelRepository.merge(existedHotel, updateHotelDto);
+
+    existedHotel.images = [...existedHotel.images, ...uploadedImages];
+
+    if (updateHotelDto.deleteImages) {
+      existedHotel.images = existedHotel.images.filter((image) => {
+        if (updateHotelDto.deleteImages.includes(image.key)) {
+          this.filesService.deleteFile(image.key);
+          return false;
+        }
+        return true;
+      });
+    }
 
     return this.hotelRepository.save(existedHotel);
   }

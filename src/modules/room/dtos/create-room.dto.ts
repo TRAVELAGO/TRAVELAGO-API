@@ -71,4 +71,14 @@ export class CreateRoomDto {
   @ApiProperty()
   @IsNotEmpty()
   readonly roomTypeId: string;
+
+  @ApiPropertyOptional({
+    type: 'array',
+    items: {
+      type: 'string',
+      format: 'binary',
+    },
+  })
+  @IsOptional()
+  readonly images: any[];
 }
