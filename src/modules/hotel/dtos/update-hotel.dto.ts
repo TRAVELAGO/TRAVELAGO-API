@@ -6,4 +6,8 @@ export class UpdateHotelDto extends PartialType(HotelDto) {
   @ApiPropertyOptional()
   @IsOptional()
   readonly rate?: number;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  readonly deleteImages: string[];
 }

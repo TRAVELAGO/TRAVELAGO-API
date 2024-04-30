@@ -2,52 +2,63 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from './user.entity';
-import { userInfoDto } from './dtos/userInfo.dto';
+import { UserInfoDto } from './dtos/user-info.dto';
 import * as bcrypt from 'bcrypt';
+import { FilesService } from '@modules/files/files.service';
 
 @Injectable()
 export class UserService {
   constructor(
     @InjectRepository(User)
     private userRepository: Repository<User>,
+    private filesService: FilesService,
   ) {}
 
-  async editInfo(idUser: string, userInfoDto: userInfoDto): Promise<any> {
-    const user = await this.userRepository.findOne({
-      where: { id: idUser },
+  async editInfo(
+    userId: string,
+    avatar: any,
+    userInfoDto: UserInfoDto,
+  ): Promise<any> {
+    const existedUser = await this.userRepository.findOne({
+      where: { id: userId },
     });
-    if (!user) {
+
+    if (!existedUser) {
       throw new Error('User not found');
-    } else {
-      try {
-        await this.userRepository.update(idUser, {
-          phoneNumber: userInfoDto.phoneNumber,
-          fullName: userInfoDto.fullName,
-          avatar: userInfoDto.avatar,
-        });
-      } catch {
-        throw new Error('Not connect Database');
-      }
     }
+
+    this.userRepository.merge(existedUser, userInfoDto);
+
+    if (avatar) {
+      const uploadedAvatar = await this.filesService.uploadFile(
+        avatar.buffer,
+        avatar.originalname,
+      );
+      existedUser?.avatar &&
+        this.filesService.deleteFile(existedUser?.avatar?.key);
+      existedUser.avatar = uploadedAvatar;
+    }
+
+    return this.userRepository.save(existedUser);
   }
 
   async changePassword(
-    idUser: string,
-    newpass: string,
-    passConfirm: string,
+    userId: string,
+    newPassword: string,
+    passwordConfirm: string,
   ): Promise<any> {
     const user = await this.userRepository.findOne({
-      where: { id: idUser },
+      where: { id: userId },
     });
     if (!user) {
       throw new Error('User not found');
     } else {
-      if (newpass === passConfirm) {
-        const pass = await this.hashPassword(newpass);
+      if (newPassword === passwordConfirm) {
+        const pass = await this.hashPassword(newPassword);
         const checkPass = bcrypt.compareSync(pass, user.password);
         if (checkPass) {
           try {
-            await this.userRepository.update(idUser, { password: pass });
+            await this.userRepository.update(userId, { password: pass });
           } catch {
             throw new Error('Not connect Database');
           }

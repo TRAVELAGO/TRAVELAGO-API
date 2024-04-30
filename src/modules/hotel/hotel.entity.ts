@@ -44,7 +44,7 @@ export class Hotel {
   @Column({ nullable: true })
   address: string;
 
-  @Column({ nullable: true })
+  @Column({ nullable: true, type: 'text' })
   description: string;
 
   @Column({ default: HotelStatus.OPEN })

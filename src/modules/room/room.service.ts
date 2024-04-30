@@ -130,6 +130,7 @@ export class RoomService {
   async update(
     userId: string,
     roomId: string,
+    images: any[],
     updateRoomDto: UpdateRoomDto,
   ): Promise<Room> {
     const existedRoom = await this.roomRepository.findOne({
@@ -160,6 +161,22 @@ export class RoomService {
     }
 
     this.roomRepository.merge(existedRoom, updateRoomDto);
+
+    const uploadedImages = images
+      ? await this.filesService.uploadFiles(images)
+      : [];
+
+    existedRoom.images = [...existedRoom.images, ...uploadedImages];
+
+    if (updateRoomDto.deleteImages) {
+      existedRoom.images = existedRoom.images.filter((image) => {
+        if (updateRoomDto.deleteImages.includes(image.key)) {
+          this.filesService.deleteFile(image.key);
+          return false;
+        }
+        return true;
+      });
+    }
 
     return this.roomRepository.save(existedRoom);
   }

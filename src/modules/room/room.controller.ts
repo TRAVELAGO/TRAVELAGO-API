@@ -12,7 +12,7 @@ import {
   UploadedFiles,
   UseInterceptors,
 } from '@nestjs/common';
-import { ApiBody, ApiConsumes, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiConsumes, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { CreateRoomDto } from './dtos/create-room.dto';
 import { RoomService } from './room.service';
 import { UpdateRoomDto } from './dtos/update-room.dto';
@@ -24,7 +24,7 @@ import { GetJwtPayload } from '@decorators/get-jwt-payload.decorator';
 import { Roles } from '@decorators/roles.decorator';
 import { PageDto } from 'src/common/dtos/page.dto';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
-import { imageFilter } from '@configs/multer-file-filter';
+import { imageFilter } from 'src/utils/multer-file-filter';
 
 @ApiTags('Rooms')
 @Controller()
@@ -55,29 +55,6 @@ export class RoomController {
 
   @Post('hotels/:hotelId/rooms')
   @ApiConsumes('multipart/form-data')
-  @ApiBody({
-    schema: {
-      type: 'object',
-      properties: {
-        name: { type: 'string' },
-        price: { type: 'number', format: 'double' },
-        discount: { type: 'number', format: 'double' },
-        total: { type: 'integer', format: 'int32' },
-        description: { type: 'string' },
-        area: { type: 'integer', format: 'int32' },
-        roomAmenities: { type: 'array' },
-        roomTypeId: { type: 'string' },
-        images: {
-          type: 'array',
-          items: {
-            type: 'string',
-            format: 'binary',
-          },
-        },
-      },
-      required: ['name', 'price', 'total', 'roomTypeId'],
-    },
-  })
   @ApiResponse({ status: 201, description: 'Create room successfully.' })
   @ApiResponse({ status: 400, description: 'Validation failure.' })
   @Roles(RoleType.HOTEL)
@@ -102,17 +79,30 @@ export class RoomController {
   }
 
   @Patch('rooms/:id')
+  @ApiConsumes('multipart/form-data')
   @ApiResponse({ status: 200, description: 'Update room successfully.' })
   @ApiResponse({ status: 400, description: 'Validation failure.' })
   @ApiResponse({ status: 404, description: 'Room does not exist.' })
   @ApiResponse({ status: 404, description: 'Room Type does not exist.' })
   @Roles(RoleType.HOTEL)
+  @UseInterceptors(
+    FileFieldsInterceptor([{ name: 'images' }], { fileFilter: imageFilter }),
+  )
   async update(
     @GetJwtPayload() user: JwtPayloadType,
     @Param('id') roomId: string,
+    @UploadedFiles()
+    files: {
+      images?: any[];
+    },
     @Body() updateRoomDto: UpdateRoomDto,
   ): Promise<Room> {
-    return this.roomService.update(user.id, roomId, updateRoomDto);
+    return this.roomService.update(
+      user.id,
+      roomId,
+      files?.images,
+      updateRoomDto,
+    );
   }
 
   @Delete('rooms/:id')

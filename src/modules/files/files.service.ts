@@ -59,19 +59,27 @@ export class FilesService {
     }
   }
 
-  async uploadFiles(files: any): Promise<FileObject[]> {
+  async uploadFiles(files: any[]): Promise<FileObject[]> {
     return Promise.all(
       files.map((file) => this.uploadFile(file.buffer, file.originalname)),
     );
   }
 
   async deleteFile(key: string): Promise<void> {
-    if (this.cloudStorageType === 'aws') {
-      this.deleteFileAws(key);
-    } else if (this.cloudStorageType === 'firebase') {
-      const desertRef = ref(this.storage, key);
-      await deleteObject(desertRef);
+    try {
+      if (this.cloudStorageType === 'aws') {
+        this.deleteFileAws(key);
+      } else if (this.cloudStorageType === 'firebase') {
+        const desertRef = ref(this.storage, key);
+        await deleteObject(desertRef);
+      }
+    } catch (error) {
+      console.error(error);
     }
+  }
+
+  async deleteFiles(keys: string[]): Promise<void> {
+    keys.map((key) => this.deleteFile(key));
   }
 
   private async uploadFileToFirebase(
