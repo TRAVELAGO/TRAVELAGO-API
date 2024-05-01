@@ -38,6 +38,7 @@ import { Cache } from 'cache-manager';
 import { RedisService } from '@modules/redis/redis.service';
 import { Voucher } from '@modules/voucher/voucher.entity';
 import { VoucherType } from '@constants/voucher-type';
+import { MailService } from '@modules/mail/mail.service';
 
 @Injectable()
 export class BookingService {
@@ -50,6 +51,7 @@ export class BookingService {
     private redisService: RedisService,
     private configService: ConfigService,
     private vnPayService: VNPayService,
+    private mailService: MailService,
   ) {}
 
   async find(user: JwtPayloadType, bookingId: string): Promise<Booking> {
@@ -285,6 +287,8 @@ export class BookingService {
       );
 
       await queryRunner.commitTransaction();
+
+      this.mailService.sendBookingSuccessMail(user, newBooking);
 
       return newBooking;
     } catch (error) {

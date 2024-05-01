@@ -1,0 +1,39 @@
+<html lang='en'>
+  <head>
+    <meta charset='UTF-8' />
+    <meta name='viewport' content='width=device-width, initial-scale=1.0' />
+    <title>Email Verification</title>
+    <style>
+      table { font-family: arial, sans-serif; border-collapse: collapse; width:
+      100%; } td, th { border: 1px solid #dddddd; text-align: left; padding:
+      8px; } tr:nth-child(even) { background-color: #dddddd; }
+    </style>
+  </head>
+  <body>
+    <p>Dear {{userName}},</p>
+    <p>You have successfully payment a booking on the Travelago website.</p>
+    <p>Your payment information:</p>
+    <table>
+      <tr>
+        <th>Name</th>
+        <th>Status</th>
+      </tr>
+      <tr>
+        <td>Room</td>
+        <td>{{roomName}}</td>
+      </tr>
+      <tr>
+        <td>Hotel</td>
+        <td>{{hotelName}}</td>
+      </tr>
+        <td>Amount to be paid</td>
+        <td>{{paymentAmount}}</td>
+      </tr>
+      </tr>
+        <td>Amount paid</td>
+        <td>{{amountPaid}}</td>
+      </tr>
+    </table>
+    <p>Thank you for using the Travelago website.</p>
+  </body>
+</html>

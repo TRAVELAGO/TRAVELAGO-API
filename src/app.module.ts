@@ -20,6 +20,7 @@ import { TasksModule } from '@modules/tasks/tasks.module';
 import { CityModule } from '@modules/city/city.module';
 import { AmenityModule } from '@modules/amenity/amenity.module';
 import { RedisModule } from '@modules/redis/redis.module';
+import { MailModule } from '@modules/mail/mail.module';
 
 @Module({
   imports: [
@@ -44,6 +45,7 @@ import { RedisModule } from '@modules/redis/redis.module';
     ScheduleModule.forRoot(),
     TasksModule,
     RedisModule,
+    MailModule,
     AuthModule,
     UserModule,
     HotelModule,

@@ -53,7 +53,7 @@ export class User {
   @Column({ default: UserStatus.ACTIVE })
   status: UserStatus;
 
-  @Column({ nullable: true })
+  @Column({ nullable: true, type: 'varchar', length: 500 })
   @Exclude({ toPlainOnly: true })
   refreshToken: string;
 
