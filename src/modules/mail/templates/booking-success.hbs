@@ -1,0 +1,54 @@
+<html lang='en'>
+  <head>
+    <meta charset='UTF-8' />
+    <meta name='viewport' content='width=device-width, initial-scale=1.0' />
+    <title>Email Verification</title>
+    <style>
+      table { font-family: arial, sans-serif; border-collapse: collapse; width:
+      100%; } td, th { border: 1px solid #dddddd; text-align: left; padding:
+      8px; } tr:nth-child(even) { background-color: #dddddd; }
+    </style>
+  </head>
+  <body>
+    <p>Dear {{userName}},</p>
+    <p>You have successfully booked a room on the Travelago website.</p>
+    <p>Your booking information:</p>
+    <table>
+      <tr>
+        <th>Name</th>
+        <th>Status</th>
+      </tr>
+      <tr>
+        <td>Check-in time</td>
+        <td>{{dateFrom}}</td>
+      </tr>
+      <tr>
+        <td>Check-out time</td>
+        <td>{{dateTo}}</td>
+      </tr>
+      <tr>
+        <td>Room</td>
+        <td>{{roomName}}</td>
+      </tr>
+      <tr>
+        <td>Hotel</td>
+        <td>{{hotelName}}</td>
+      </tr>
+      <tr>
+        <td>Total Amount</td>
+        <td>{{totalAmount}}</td>
+      </tr>
+      <tr>
+        <td>Discount</td>
+        <td>{{totalDiscount}}</td>
+      </tr>
+      <tr>
+        <td>Payment Amount</td>
+        <td>{{paymentAmount}}</td>
+      </tr>
+    </table>
+    <p>Link payment:
+      <a href={{paymentUrl}} target='_blank'>{{paymentUrl}}</a></p>
+    <p>Please pay within 15 minutes.</p>
+  </body>
+</html>

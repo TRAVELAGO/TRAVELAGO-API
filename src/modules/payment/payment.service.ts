@@ -14,6 +14,7 @@ import { getDateFromVNPDate } from 'src/utils/date';
 import { BookingStatus } from '@constants/booking-status';
 import { RedisService } from '@modules/redis/redis.service';
 import { REDIS_HASH_BOOKING_KEY } from '@constants/constants';
+import { MailService } from '@modules/mail/mail.service';
 
 export class PaymentService {
   constructor(
@@ -24,6 +25,7 @@ export class PaymentService {
     private vnPayService: VNPayService,
     private dataSource: DataSource,
     private redisService: RedisService,
+    private mailService: MailService,
   ) {}
 
   async find(paymentId: string): Promise<Payment> {
@@ -59,6 +61,7 @@ export class PaymentService {
       },
       relations: {
         user: true,
+        room: true,
       },
     });
 
@@ -103,6 +106,8 @@ export class PaymentService {
       await this.redisService.hDel(REDIS_HASH_BOOKING_KEY, existedBooking.id);
 
       await queryRunner.commitTransaction();
+
+      this.mailService.sendPaymentSuccessMail(existedBooking, newPayment);
 
       return newPayment;
     } catch (error) {

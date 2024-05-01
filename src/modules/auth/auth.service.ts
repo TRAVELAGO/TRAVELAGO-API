@@ -161,6 +161,7 @@ export class AuthService {
     const jwtPayload: JwtPayloadType = {
       id: user.id,
       email: user.email,
+      fullName: user.fullName,
       role: user.role,
     };
 
@@ -184,6 +185,7 @@ export class AuthService {
     return this.generateToken({
       id: payload.id,
       email: payload.email,
+      fullName: payload.fullName,
       role: payload.role,
     });
   }
