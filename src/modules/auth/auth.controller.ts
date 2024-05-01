@@ -28,6 +28,13 @@ import { RoleType } from '@constants/role-type';
 export class AuthController {
   constructor(private authService: AuthService) {}
 
+  @Post('register-admin')
+  async registerAdmin(
+    @Body() registerDto: RegisterDto,
+  ): Promise<Partial<User>> {
+    return this.authService.register(registerDto, RoleType.ADMIN);
+  }
+
   @Post('register-user')
   async registerUser(@Body() registerDto: RegisterDto): Promise<Partial<User>> {
     return this.authService.register(registerDto, RoleType.USER);

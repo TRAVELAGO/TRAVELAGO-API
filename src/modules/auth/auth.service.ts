@@ -42,9 +42,9 @@ export class AuthService {
     registerDto: RegisterDto,
     userRole: RoleType = RoleType.USER,
   ): Promise<Partial<User>> {
-    if (userRole === RoleType.ADMIN) {
-      throw new BadRequestException('Unable to register for admin role.');
-    }
+    // if (userRole === RoleType.ADMIN) {
+    //   throw new BadRequestException('Unable to register for admin role.');
+    // }
 
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
