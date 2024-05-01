@@ -9,6 +9,7 @@ services:
       - DB_TYPE=postgres
       - DB_HOST=postgres
       - DB_PORT=5432
+      - DB_USERNAME=db_user
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - PORT=8987
@@ -26,7 +27,7 @@ services:
     restart: always
     environment:
       POSTGRES_PASSWORD: ${DB_PASSWORD}
-      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_USER: db_user
       POSTGRES_DB: ${DB_DATABASE}
       TZ: 'GMT'
       PGTZ: 'GMT'
@@ -74,4 +75,4 @@ volumes:
      
 networks:
   travelago-net:
-    driver: local
+    driver: bridge

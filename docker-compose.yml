@@ -9,6 +9,7 @@ services:
       - DB_TYPE=mysql 
       - DB_HOST=mysql
       - DB_PORT=3306
+      - DB_USERNAME=db_user
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - PORT=8789
@@ -24,7 +25,7 @@ services:
     restart: always
     environment:
       MYSQL_DATABASE: '${DB_DATABASE}'
-      MYSQL_USER: '${DB_USERNAME}'
+      MYSQL_USER: 'db_user'
       MYSQL_ROOT_PASSWORD: '${DB_ROOT_PASSWORD}'
       MYSQL_PASSWORD: '${DB_PASSWORD}'
       MYSQL_ALLOW_EMPTY_PASSWORD: '${DB_ALLOW_EMPTY_PASSWORD}'
