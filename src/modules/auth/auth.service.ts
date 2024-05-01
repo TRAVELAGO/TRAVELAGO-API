@@ -76,7 +76,9 @@ export class AuthService {
         password: hashPassword,
         role: userRole,
         status:
-          userRole === RoleType.USER ? UserStatus.ACTIVE : UserStatus.INACTIVE,
+          userRole === RoleType.USER
+            ? UserStatus.ACTIVE
+            : UserStatus.WAIT_ACTIVE,
       });
 
       await queryRunner.manager.save(newUser);
@@ -113,6 +115,7 @@ export class AuthService {
       email: user.email,
       fullName: user.fullName,
       role: user.role,
+      status: user.status,
     };
 
     const response: LoginResponse = {
@@ -137,6 +140,7 @@ export class AuthService {
       email: payload.email,
       fullName: payload.fullName,
       role: payload.role,
+      status: payload.status,
     });
   }
 
@@ -208,8 +212,6 @@ export class AuthService {
         otpCode,
         MAX_VERIFY_OTP_TIME * 60 * 1000,
       );
-
-      console.log(userEmail);
 
       await this.mailService.sendOtpCodeMail(existedUser.email, otpCode);
     }
