@@ -10,6 +10,7 @@ import {
   Post,
   Query,
   UploadedFiles,
+  UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { ApiConsumes, ApiResponse, ApiTags } from '@nestjs/swagger';
@@ -25,6 +26,7 @@ import { Roles } from '@decorators/roles.decorator';
 import { PageDto } from 'src/common/dtos/page.dto';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { imageFilter } from 'src/utils/multer-file-filter';
+import { ActiveHotelGuard } from '@modules/auth/guards/active-hotel.guard';
 
 @ApiTags('Rooms')
 @Controller()
@@ -58,6 +60,7 @@ export class RoomController {
   @ApiResponse({ status: 201, description: 'Create room successfully.' })
   @ApiResponse({ status: 400, description: 'Validation failure.' })
   @Roles(RoleType.HOTEL)
+  @UseGuards(ActiveHotelGuard)
   @UseInterceptors(
     FileFieldsInterceptor([{ name: 'images' }], { fileFilter: imageFilter }),
   )
@@ -85,6 +88,7 @@ export class RoomController {
   @ApiResponse({ status: 404, description: 'Room does not exist.' })
   @ApiResponse({ status: 404, description: 'Room Type does not exist.' })
   @Roles(RoleType.HOTEL)
+  @UseGuards(ActiveHotelGuard)
   @UseInterceptors(
     FileFieldsInterceptor([{ name: 'images' }], { fileFilter: imageFilter }),
   )
@@ -110,6 +114,7 @@ export class RoomController {
   @ApiResponse({ status: 404, description: 'Room not found.' })
   @HttpCode(HttpStatus.NO_CONTENT)
   @Roles(RoleType.HOTEL)
+  @UseGuards(ActiveHotelGuard)
   async delete(
     @GetJwtPayload() user: JwtPayloadType,
     @Param('id') roomId: string,

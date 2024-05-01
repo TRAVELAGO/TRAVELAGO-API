@@ -6,6 +6,7 @@ import { JwtPayloadType } from './types/jwt-payload.type';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
 import { getBlacklistKey } from 'src/utils/cache';
+import { UserStatus } from '@constants/user-status';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
@@ -24,6 +25,10 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
   async validate(req: any, payload: JwtPayloadType) {
     if (!payload || !payload.id) {
       throw new UnauthorizedException();
+    }
+
+    if (payload.status === UserStatus.INACTIVE) {
+      throw new UnauthorizedException('Account is inactive.');
     }
 
     const jwtToken = req?.get('authorization')?.replace('Bearer', '').trim();
