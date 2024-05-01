@@ -3,6 +3,7 @@ import { Injectable } from '@nestjs/common';
 import { Booking } from '@modules/booking/booking.entity';
 import { JwtPayloadType } from '@modules/auth/strategies/types/jwt-payload.type';
 import { Payment } from '@modules/payment/payment.entity';
+import { MAX_VERIFY_OTP_TIME } from '@constants/constants';
 
 @Injectable()
 export class MailService {
@@ -44,6 +45,29 @@ export class MailService {
         hotelName: booking?.room?.hotel?.name,
         paymentAmount: booking?.totalAmount,
         amountPaid: payment.amount,
+      },
+    });
+  }
+
+  async sendNewPasswordMail(email: string, newPassword: string) {
+    this.mailerService.sendMail({
+      to: email,
+      subject: 'New password',
+      template: './new-password',
+      context: {
+        newPassword,
+      },
+    });
+  }
+
+  async sendOtpCodeMail(email: string, otpCode: string) {
+    this.mailerService.sendMail({
+      to: email,
+      subject: 'Forgot password - OTP code',
+      template: './otp-code',
+      context: {
+        otpCode,
+        expireTime: MAX_VERIFY_OTP_TIME,
       },
     });
   }

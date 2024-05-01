@@ -1,7 +1,6 @@
 import {
   Body,
   Controller,
-  Param,
   Post,
   UseGuards,
   UsePipes,
@@ -21,23 +20,24 @@ import { GetJwtPayload } from '@decorators/get-jwt-payload.decorator';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { JwtPayloadType } from './strategies/types/jwt-payload.type';
 import { ForgotPasswordDto } from './dtos/forgot-password.dto';
-import { Otpdto } from './dtos/Otp.dto';
+import { OtpDto } from './dtos/Otp.dto';
+import { RoleType } from '@constants/role-type';
 
 @ApiTags('Auth')
 @Controller('auth')
 export class AuthController {
   constructor(private authService: AuthService) {}
 
-  @Post('register')
-  async register(@Body() registerDto: RegisterDto): Promise<Partial<User>> {
-    return this.authService.register(registerDto);
+  @Post('register-user')
+  async registerUser(@Body() registerDto: RegisterDto): Promise<Partial<User>> {
+    return this.authService.register(registerDto, RoleType.USER);
   }
 
-  @Post('registerHotel')
+  @Post('register-hotel')
   async registerHotel(
-    @Body() registerHotelDto: RegisterDto,
+    @Body() registerDto: RegisterDto,
   ): Promise<Partial<User>> {
-    return this.authService.registerHotel(registerHotelDto);
+    return this.authService.register(registerDto, RoleType.HOTEL);
   }
 
   @Post('login')
@@ -65,17 +65,16 @@ export class AuthController {
   }
 
   @Post('forgot-password')
+  @HttpCode(HttpStatus.OK)
   async forgotPassWord(
     @Body() forgotPasswordDto: ForgotPasswordDto,
   ): Promise<void> {
     return this.authService.forgotPassword(forgotPasswordDto.email);
   }
 
-  @Post(':id/checkCodeOtp')
-  async checkCodeOtp(
-    @Param() id: string,
-    @Body() codeOtp: Otpdto,
-  ): Promise<void> {
-    return this.authService.checkCodeOtp(id, codeOtp.code);
+  @Post('check-otp')
+  @HttpCode(HttpStatus.OK)
+  async checkCodeOtp(@Body() otpDto: OtpDto): Promise<void> {
+    return this.authService.checkCodeOtp(otpDto);
   }
 }
