@@ -1,7 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import {
   IsEmail,
-  IsEnum,
   IsNotEmpty,
   IsPhoneNumber,
   IsString,
@@ -10,7 +9,6 @@ import {
   MinLength,
 } from 'class-validator';
 import { Match } from '@decorators/match-password.decorator';
-import { RoleType } from '@constants/role-type';
 
 export class RegisterDto {
   @ApiProperty({
@@ -52,8 +50,4 @@ export class RegisterDto {
   @ApiProperty()
   @IsNotEmpty()
   readonly fullName: string;
-
-  @ApiProperty({ default: RoleType.USER })
-  @IsEnum(RoleType)
-  readonly role: RoleType;
 }

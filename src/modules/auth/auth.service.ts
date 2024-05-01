@@ -17,15 +17,14 @@ import { JwtPayloadType } from './strategies/types/jwt-payload.type';
 import { LoginResponse, Token } from './strategies/types/login.type';
 import { RoleType } from '@constants/role-type';
 import { generateRandomOTP, generateRandomString } from '../../utils/random';
-import { RegisterHotelDto } from './dtos/registerHotel.dto';
 import { LoginDto } from '@modules/admin/dtos/login.dto';
-// import { sendMail } from 'src/utils/sendMail';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
-import { TypeSubjectEmail } from '@constants/mail';
-import { sendMail } from 'src/utils/sendMail';
 import { getBlacklistKey } from 'src/utils/cache';
-// import { TypeSubjectEmail } from '@constants/mail';
+import { UserStatus } from '@constants/user-status';
+import { MailService } from '@modules/mail/mail.service';
+import { MAX_VERIFY_OTP_TIME } from '@constants/constants';
+import { OtpDto } from './dtos/Otp.dto';
 
 @Injectable()
 export class AuthService {
@@ -36,10 +35,14 @@ export class AuthService {
     private jwtService: JwtService,
     private configService: ConfigService,
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
+    private mailService: MailService,
   ) {}
 
-  async register(registerDto: RegisterDto): Promise<Partial<User>> {
-    if (registerDto.role === RoleType.ADMIN) {
+  async register(
+    registerDto: RegisterDto,
+    userRole: RoleType = RoleType.USER,
+  ): Promise<Partial<User>> {
+    if (userRole === RoleType.ADMIN) {
       throw new BadRequestException('Unable to register for admin role.');
     }
 
@@ -71,65 +74,12 @@ export class AuthService {
       const newUser = await this.userRepository.create({
         ...registerDto,
         password: hashPassword,
-        role: RoleType.USER,
+        role: userRole,
+        status:
+          userRole === RoleType.USER ? UserStatus.ACTIVE : UserStatus.INACTIVE,
       });
 
       await queryRunner.manager.save(newUser);
-      await queryRunner.commitTransaction();
-
-      return newUser;
-    } catch (error) {
-      await queryRunner.rollbackTransaction();
-      throw error;
-    } finally {
-      await queryRunner.release();
-    }
-  }
-
-  async registerHotel(
-    registerHotelDto: RegisterHotelDto,
-  ): Promise<Partial<User>> {
-    const queryRunner = this.dataSource.createQueryRunner();
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
-
-    try {
-      const phoneExists = await this.userRepository.exists({
-        where: {
-          phoneNumber: registerHotelDto.phoneNumber,
-        },
-      });
-
-      if (phoneExists) {
-        throw new BadRequestException('Phone number already exists.');
-      }
-
-      const existedUser = await this.userRepository.findOne({
-        where: { email: registerHotelDto.email },
-      });
-
-      if (existedUser) {
-        throw new BadRequestException('Email has been verified.');
-      }
-
-      const hashPassword = await this.hashPassword(registerHotelDto.password);
-
-      const newUser = await this.userRepository.create({
-        ...registerHotelDto,
-        password: hashPassword,
-        role: RoleType.HOTEL,
-        status: 0,
-      });
-
-      await queryRunner.manager.save(newUser);
-
-      const newHotel = this.hotelRepository.create({
-        user: newUser,
-        name: registerHotelDto?.hotelName,
-        images: [],
-      });
-      await queryRunner.manager.save(newHotel);
-
       await queryRunner.commitTransaction();
 
       return newUser;
@@ -237,10 +187,6 @@ export class AuthService {
     return { accessToken, refreshToken };
   }
 
-  private async getJwtTokenTtl(jwtToken: string) {
-    return await this.jwtService.decode(jwtToken);
-  }
-
   private async hashPassword(password: string): Promise<string> {
     const saltRound = 10;
     const salt = await bcrypt.genSalt(saltRound);
@@ -250,50 +196,55 @@ export class AuthService {
   }
 
   async forgotPassword(userEmail: string): Promise<void> {
-    const isUser = await this.userRepository.findOne({
+    const existedUser = await this.userRepository.findOne({
       where: { email: userEmail },
     });
 
-    if (!isUser) {
-      throw new HttpException('User is not exist.', HttpStatus.UNAUTHORIZED);
-    }
-    const codeOtp = generateRandomOTP();
+    if (existedUser) {
+      const otpCode = generateRandomOTP();
 
-    sendMail(userEmail, TypeSubjectEmail.FORGETPASS, codeOtp);
-    this.cacheManager.set(userEmail, codeOtp, 10 * 60 * 1000);
-    console.log('succcess');
+      await this.cacheManager.set(
+        userEmail,
+        otpCode,
+        MAX_VERIFY_OTP_TIME * 60 * 1000,
+      );
+
+      console.log(userEmail);
+
+      await this.mailService.sendOtpCodeMail(existedUser.email, otpCode);
+    }
   }
 
-  async checkCodeOtp(id: any, CodeOtp: string) {
-    const idValue = id.id;
+  async checkCodeOtp(otpDto: OtpDto) {
     const existedUser = await this.userRepository.findOne({
-      where: { id: idValue },
+      where: { email: otpDto.email },
     });
 
     if (!existedUser) {
-      throw new HttpException('User is not exist.', HttpStatus.UNAUTHORIZED);
+      throw new BadRequestException('Email is not exists.');
     }
     const email = existedUser.email;
-    console.log(email);
-    let checkcodeOtp: string | null = null;
-    try {
-      checkcodeOtp = await this.cacheManager.get(email);
-      console.log(checkcodeOtp);
-      if (checkcodeOtp === null) {
-        throw new HttpException('Otp has expired', HttpStatus.UNAUTHORIZED);
-      }
-    } catch (error) {
-      console.error('Error while getting code from cache:', error);
+
+    const checkOtpCode = await this.cacheManager.get(email);
+    console.log(checkOtpCode, email);
+    if (!checkOtpCode) {
+      throw new BadRequestException('Otp has expired.');
     }
-    console.log(CodeOtp);
-    if (checkcodeOtp === CodeOtp) {
-      const newPass = await this.hashPassword(generateRandomString(10));
-      console.log(newPass);
-      await this.userRepository.update({ id: idValue }, { password: newPass });
-      await this.cacheManager.del(email);
-      sendMail(email, TypeSubjectEmail.VERIFIEDCODE, newPass);
-    } else {
-      throw new HttpException('Otp is not correct.', HttpStatus.UNAUTHORIZED);
+
+    if (checkOtpCode !== otpDto.code) {
+      throw new BadRequestException('Otp is not correct.');
     }
+
+    const newPassword = generateRandomString(10);
+    const newHashedPassword = await this.hashPassword(newPassword);
+
+    await this.userRepository.update(
+      { id: existedUser.id },
+      { password: newHashedPassword },
+    );
+
+    await this.cacheManager.del(email);
+
+    await this.mailService.sendNewPasswordMail(existedUser.email, newPassword);
   }
 }
