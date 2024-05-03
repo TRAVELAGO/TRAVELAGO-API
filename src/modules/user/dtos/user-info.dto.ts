@@ -15,6 +15,10 @@ export class UserInfoDto {
   @IsOptional()
   readonly fullName: string;
 
+  @ApiPropertyOptional()
+  @IsOptional()
+  readonly address: string;
+
   @ApiPropertyOptional({
     type: 'string',
     format: 'binary',
