@@ -126,4 +126,10 @@ export class RoomController {
   async findByHotel(@Param('hotelId') hotelId: string): Promise<Room[]> {
     return this.roomService.findRoomsByHotel(hotelId);
   }
+
+  @Get(':userId/getSuggestedRooms')
+  async getSuggestedRooms(@Param('userId') userId: string) {
+    const rooms = await this.roomService.getSuggestedRooms(userId);
+    return rooms;
+  }
 }

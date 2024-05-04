@@ -1,14 +1,14 @@
 import { RoleType } from '@constants/role-type';
 import { UserStatus } from '@constants/user-status';
-import { FileObject } from '@modules/files/types/file-object';
+import { Feedback } from '@modules/feedback/feedback.entity';
 import { Exclude } from 'class-transformer';
-import { formatFileObject, getFileObject } from 'src/utils/files';
 import {
   Entity,
   Column,
   PrimaryGeneratedColumn,
   CreateDateColumn,
   UpdateDateColumn,
+  OneToMany,
 } from 'typeorm';
 
 @Entity()
@@ -35,27 +35,18 @@ export class User {
   @Column({ default: RoleType.USER })
   role: RoleType;
 
-  @Column({
-    nullable: true,
-    type: 'varchar',
-    length: 1000,
-    transformer: {
-      to(value: FileObject): string {
-        return formatFileObject(value);
-      },
-      from(value: string): FileObject {
-        return getFileObject(value);
-      },
-    },
-  })
-  avatar: FileObject;
+  @Column({ nullable: true, default: null })
+  avatar: string;
 
   @Column({ default: UserStatus.ACTIVE })
   status: UserStatus;
 
-  @Column({ nullable: true, type: 'varchar', length: 500 })
+  @Column({ nullable: true })
   @Exclude({ toPlainOnly: true })
   refreshToken: string;
+
+  @OneToMany(() => Feedback, (feedback) => feedback.room)
+  feedbacks: Feedback[];
 
   @CreateDateColumn({ type: 'timestamp' })
   createdAt: Date;

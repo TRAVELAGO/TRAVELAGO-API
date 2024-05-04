@@ -26,6 +26,7 @@ import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
 import { ConfigService } from '@nestjs/config';
 import { FilesService } from '@modules/files/files.service';
+import { Booking } from '@modules/booking/booking.entity';
 
 @Injectable()
 export class RoomService {
@@ -35,6 +36,8 @@ export class RoomService {
     private roomTypeRepository: Repository<RoomType>,
     @InjectRepository(Hotel) private hotelRepository: Repository<Hotel>,
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
+    @InjectRepository(Booking)
+    private readonly bookingRepository: Repository<Booking>,
     private configService: ConfigService,
     private filesService: FilesService,
   ) {}
@@ -237,5 +240,51 @@ export class RoomService {
 
   async findRoomsByHotel(hotelId: string): Promise<Room[]> {
     return this.roomRepository.find({ where: { hotel: { id: hotelId } } });
+  }
+
+  async getSuggestedRooms(userId: string): Promise<Room[]> {
+    const bookedRoomIds = await this.getBookedRoomIds(userId);
+
+    const bookedRooms = await this.roomRepository
+      .createQueryBuilder('room')
+      .innerJoin('room.price', 'price')
+      .whereInIds(bookedRoomIds)
+      .getMany();
+
+    const averagePrice = this.calculateAveragePrice(bookedRooms);
+
+    const suggestedRooms = await this.roomRepository
+      .createQueryBuilder('room')
+      .innerJoin('room.price', 'price')
+      .where('ABS(price.amount - :averagePrice) < :threshold', {
+        averagePrice: averagePrice,
+        threshold: averagePrice * 0.1,
+      })
+      .getMany();
+
+    return suggestedRooms;
+  }
+
+  private async getBookedRoomIds(userId: string): Promise<string[]> {
+    const bookings = await this.bookingRepository.find({
+      where: { user: { id: userId } },
+    });
+
+    const roomIds = bookings.map((booking) => booking.room.id);
+
+    // const roomIds = bookings.map(booking => booking.room);
+    return roomIds;
+  }
+
+  private calculateAveragePrice(rooms: Room[]): number {
+    if (rooms.length === 0) {
+      return 0;
+    }
+
+    const totalAmount = rooms.reduce((sum, room) => sum + room.price, 0);
+
+    const averagePrice = totalAmount / rooms.length;
+
+    return averagePrice;
   }
 }
