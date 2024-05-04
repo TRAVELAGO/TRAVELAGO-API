@@ -246,21 +246,19 @@ export class RoomService {
     const bookedRoomIds = await this.getBookedRoomIds(userId);
 
     const bookedRooms = await this.roomRepository
-      .createQueryBuilder('room')
-      .innerJoin('room.price', 'price')
-      .whereInIds(bookedRoomIds)
-      .getMany();
+  .createQueryBuilder('room')
+  .whereInIds(bookedRoomIds)
+  .getMany();
 
     const averagePrice = this.calculateAveragePrice(bookedRooms);
 
     const suggestedRooms = await this.roomRepository
-      .createQueryBuilder('room')
-      .innerJoin('room.price', 'price')
-      .where('ABS(price.amount - :averagePrice) < :threshold', {
-        averagePrice: averagePrice,
-        threshold: averagePrice * 0.1,
-      })
-      .getMany();
+  .createQueryBuilder('room')
+  .where('ABS(room.price - :averagePrice) < :threshold', {
+    averagePrice: averagePrice,
+    threshold: averagePrice * 0.1,
+  })
+  .getMany();
 
     return suggestedRooms;
   }
