@@ -22,7 +22,7 @@ import { Roles } from '@decorators/roles.decorator';
 import { BookingStatus } from '@constants/booking-status';
 import { PageDto } from 'src/common/dtos/page.dto';
 import { SearchBookingDto } from './dtos/search-booking.dto';
-import { ActiveHotelGuard } from '@modules/auth/guards/active-hotel.guard';
+import { ActiveHotel } from '@decorators/active-hotel.decorator';
 
 @ApiTags('Bookings')
 @Controller('bookings')
@@ -69,8 +69,7 @@ export class BookingController {
   @ApiResponse({ status: 201, description: 'Create booking successfully.' })
   @ApiResponse({ status: 400, description: 'Validation failure.' })
   @ApiResponse({ status: 409, description: 'Conflict booking time.' })
-  @Roles(RoleType.HOTEL)
-  @UseGuards(ActiveHotelGuard)
+  @ActiveHotel()
   async bookingDirectly(
     @GetJwtPayload() user: JwtPayloadType,
     @Body() createBookingDto: CreateBookingDto,
@@ -82,8 +81,7 @@ export class BookingController {
   @ApiResponse({ status: 200, description: 'Update booking successfully.' })
   @ApiResponse({ status: 404, description: 'Booking does not exist.' })
   @ApiResponse({ status: 403 })
-  @Roles(RoleType.HOTEL)
-  @UseGuards(ActiveHotelGuard)
+  @ActiveHotel()
   async checkIn(
     @GetJwtPayload() user: JwtPayloadType,
     @Param('id') bookingId: string,
