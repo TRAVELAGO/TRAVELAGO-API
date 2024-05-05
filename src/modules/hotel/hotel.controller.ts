@@ -8,20 +8,17 @@ import {
   Delete,
   UseInterceptors,
   UploadedFiles,
-  UseGuards,
 } from '@nestjs/common';
 import { HotelService } from './hotel.services';
 import { Hotel } from '@modules/hotel/hotel.entity';
 import { ApiConsumes, ApiTags } from '@nestjs/swagger';
 import { HotelDto } from './dtos/hotel.dto';
-import { RoleType } from '@constants/role-type';
-import { Roles } from '@decorators/roles.decorator';
 import { GetJwtPayload } from '@decorators/get-jwt-payload.decorator';
 import { JwtPayloadType } from '@modules/auth/strategies/types/jwt-payload.type';
 import { UpdateHotelDto } from './dtos/update-hotel.dto';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { imageFilter } from 'src/utils/multer-file-filter';
-import { ActiveHotelGuard } from '@modules/auth/guards/active-hotel.guard';
+import { ActiveHotel } from '@decorators/active-hotel.decorator';
 
 @ApiTags('Hotel')
 @Controller('hotels')
@@ -43,8 +40,7 @@ export class HotelController {
   @UseInterceptors(
     FileFieldsInterceptor([{ name: 'images' }], { fileFilter: imageFilter }),
   )
-  @Roles(RoleType.HOTEL)
-  @UseGuards(ActiveHotelGuard)
+  @ActiveHotel()
   async update(
     @GetJwtPayload() user: JwtPayloadType,
     @Param('id') id: string,
@@ -58,8 +54,7 @@ export class HotelController {
   }
 
   @Delete(':id')
-  @Roles(RoleType.HOTEL)
-  @UseGuards(ActiveHotelGuard)
+  @ActiveHotel()
   async remove(
     @GetJwtPayload() user: JwtPayloadType,
     @Param('id') id: string,
@@ -72,8 +67,7 @@ export class HotelController {
   @UseInterceptors(
     FileFieldsInterceptor([{ name: 'images' }], { fileFilter: imageFilter }),
   )
-  @Roles(RoleType.HOTEL)
-  @UseGuards(ActiveHotelGuard)
+  @ActiveHotel()
   async create(
     @GetJwtPayload() user: JwtPayloadType,
     @UploadedFiles()
