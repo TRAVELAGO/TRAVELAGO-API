@@ -11,5 +11,5 @@ export class CreateFeedbackDto {
   @ApiProperty()
   @IsString()
   @IsOptional()
-  comment?: string;
+  comment: string;
 }

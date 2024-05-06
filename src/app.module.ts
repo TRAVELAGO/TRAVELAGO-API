@@ -21,6 +21,7 @@ import { CityModule } from '@modules/city/city.module';
 import { AmenityModule } from '@modules/amenity/amenity.module';
 import { RedisModule } from '@modules/redis/redis.module';
 import { MailModule } from '@modules/mail/mail.module';
+import { FeedbackModule } from '@modules/feedback/feedback.module';
 
 @Module({
   imports: [
@@ -57,6 +58,7 @@ import { MailModule } from '@modules/mail/mail.module';
     PaymentModule,
     CityModule,
     AmenityModule,
+    FeedbackModule
   ],
   providers: [ClearCacheService],
 })

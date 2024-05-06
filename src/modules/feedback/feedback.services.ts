@@ -65,12 +65,12 @@ export class FeedbackService {
   }
 
   async create(userId: string, roomId: string, feedbackData: CreateFeedbackDto): Promise<Feedback> {
-    const booking = await this.bookingRepository.findOne({
+    const booking = await this.bookingRepository.find({
       where: {
         user: {id:userId},
         room: {id: roomId},
         status: BookingStatus.CHECK_IN,
-        dateTo: MoreThanOrEqual(new Date()),
+        // dateTo: MoreThanOrEqual(new Date()),
       },
     });
 
@@ -79,29 +79,34 @@ export class FeedbackService {
     }
 
     const reportFeedback = await this.feedbackRepository.create({
-      ...feedbackData,
+      rate: feedbackData.rate,
+      comment: feedbackData.comment,
       status: FeedbackStatus.PENDDING,
-      userSend: RoleType.USER
+      userSend: RoleType.USER,
+      user: {id:userId},
+      room: {id: roomId},
     });
+
+    this.feedbackRepository.save(reportFeedback);
 
     const room = await this.roomRepository.findOne({
       where: {id: roomId}
     });
     const rate = await this.calculateRoomRate(roomId); 
+    room.rate = rate;
     await this.roomRepository.save(room);
-
     const hotel = await this.hotelRepository.findOne({
       where: {rooms: {id: roomId}}
     });
     hotel.rate = await this.calculateHotelRate(hotel.id); 
     room.rate = rate;
     await this.hotelRepository.save(hotel);
-
     return await this.feedbackRepository.save(reportFeedback);
   }
 
 
   async calculateRoomRate(roomId: string): Promise<number>  {
+    console.log(roomId)
     const feedbacks = await this.feedbackRepository.find({
       where: {
         room: { id: roomId },
@@ -110,10 +115,9 @@ export class FeedbackService {
       select: ['rate']
     }); 
 
-    const rates = feedbacks.map(feedback => feedback.rate);
-
-    const averageRate = rates.reduce((total, rate) => total + rate, 0) / rates.length;
-
+    const rates = feedbacks.map(feedback => parseFloat((feedback as any).rate));
+    const sum = rates.reduce((total, rate) => total + rate, 0);
+    const averageRate = rates.length > 0 ? sum / rates.length : 0;
     return averageRate;
   }
 
@@ -127,7 +131,8 @@ export class FeedbackService {
 
     const rates = rooms.map(feedback => feedback.rate);
 
-    const averageRate = rates.reduce((total, rate) => total + rate, 0) / rates.length;
+    const sum = rates.reduce((total, rate) => total + rate, 0);
+    const averageRate = rates.length > 0 ? sum / rates.length : 0;
 
     return averageRate;
   }

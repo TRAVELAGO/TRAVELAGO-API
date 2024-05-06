@@ -1,7 +1,9 @@
 import { RoleType } from '@constants/role-type';
 import { UserStatus } from '@constants/user-status';
 import { Feedback } from '@modules/feedback/feedback.entity';
+import { FileObject } from '@modules/files/types/file-object';
 import { Exclude } from 'class-transformer';
+import { formatFileObject, getFileObject } from 'src/utils/files';
 import {
   Entity,
   Column,
@@ -35,13 +37,25 @@ export class User {
   @Column({ default: RoleType.USER })
   role: RoleType;
 
-  @Column({ nullable: true, default: null })
-  avatar: string;
+  @Column({
+    nullable: true,
+    type: 'varchar',
+    length: 1000,
+    transformer: {
+      to(value: FileObject): string {
+        return formatFileObject(value);
+      },
+      from(value: string): FileObject {
+        return getFileObject(value);
+      },
+    },
+  })
+  avatar: FileObject;
 
   @Column({ default: UserStatus.ACTIVE })
   status: UserStatus;
 
-  @Column({ nullable: true })
+  @Column({ nullable: true, type: 'varchar', length: 500 })
   @Exclude({ toPlainOnly: true })
   refreshToken: string;
 
