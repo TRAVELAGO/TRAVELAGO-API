@@ -116,8 +116,14 @@ export class RoomController {
     return this.roomService.delete(user.id, roomId);
   }
 
-  @Get('/hotel/:hotelId')
-  async findByHotel(@Param('hotelId') hotelId: string): Promise<Room[]> {
-    return this.roomService.findRoomsByHotel(hotelId);
-  }
+  // @Get('/hotel/:hotelId')
+  // async findByHotel(@Param('hotelId') hotelId: string): Promise<Room[]> {
+  //   return this.roomService.findRoomsByHotel(hotelId);
+  // }
+
+  // @Get(':userId/getSuggestedRooms')
+  // async getSuggestedRooms(@Param('userId') userId: string) {
+  //   const rooms = await this.roomService.getSuggestedRooms(userId);
+  //   return rooms;
+  // }
 }

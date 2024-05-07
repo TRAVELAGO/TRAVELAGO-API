@@ -1483,7 +1483,7 @@
     jsonc-parser "3.2.1"
     pluralize "8.0.0"
 
-"@nestjs/swagger@^7.3.0":
+"@nestjs/swagger@^7.3.1":
   version "7.3.1"
   resolved "https://registry.yarnpkg.com/@nestjs/swagger/-/swagger-7.3.1.tgz#353fdd5bd6f23564505117b1c82d7decc145e8fe"
   integrity sha512-LUC4mr+5oAleEC/a2j8pNRh1S5xhKXJ1Gal5ZdRjt9XebQgbngXCdW7JTA9WOEcwGtFZN9EnKYdquzH971LZfw==
@@ -2915,7 +2915,7 @@ class-transformer@^0.5.1:
 
 class-validator@^0.14.1:
   version "0.14.1"
-  resolved "https://registry.npmjs.org/class-validator/-/class-validator-0.14.1.tgz"
+  resolved "https://registry.yarnpkg.com/class-validator/-/class-validator-0.14.1.tgz#ff2411ed8134e9d76acfeb14872884448be98110"
   integrity sha512-2VEG9JICxIqTpoK1eMzZqaV+u/EiwEJkMGzTrZf6sU/fwsnOITVgYJ8yojSy6CaXtO9V0Cc6ZQZ8h8m4UBuLwQ==
   dependencies:
     "@types/validator" "^13.11.8"
