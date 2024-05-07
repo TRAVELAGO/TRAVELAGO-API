@@ -45,11 +45,24 @@ export class FeedbackService {
     });
   }
 
-  async hotelGetAllFeedbacks(idHotel: string): Promise<Feedback[]> {
-    const rooms = this.roomRepository.find({
-      where: { hotel: { id: idHotel } }
+  async hotelGetAllFeedbacks(idUser: string): Promise<Feedback[]> {
+
+    const hotels = this.hotelRepository.find({
+      where: {user: {id: idUser}}
+    })
+    const hotelIds = (await hotels).map(hotel => hotel.id)
+    console.log(hotelIds)
+    console.log("121")
+    const rooms = await this.roomRepository.find({
+      where: { hotel: { id: In(hotelIds) }}
     });
+    // const rooms = this.roomRepository.find({
+    //   where: { hotel: { id: idHotel } }
+    // });
+    console.log(rooms)
     const roomIds = (await rooms).map(room => room.id);
+    console.log("assa")
+    console.log(roomIds)
     const allFeedbacks = await this.feedbackRepository.find({
       where: { room: { id: In(roomIds) }, userSend: RoleType.USER }
     });
@@ -146,18 +159,20 @@ export class FeedbackService {
     const hotel = await this.hotelRepository.findOne({
       where: { id: hotelId }
     })
-
+    console.log("aaa")
     if (!hotel) {
 
     }
 
     const reply = await this.feedbackRepository.create({
       ...replyFeedback,
-      userSend: RoleType.HOTEL
+      userSend: RoleType.HOTEL,
+      status: FeedbackStatus.RESOLVED
     }
     )
+    
     const savedReply = await this.feedbackRepository.save(reply);
-
+    console.log("bbb");
     const feedback = await this.feedbackRepository.findOne({
       where: { id: feedbackId }
     })
@@ -169,7 +184,7 @@ export class FeedbackService {
         { status: FeedbackStatus.RESOLVED }
       )
     }
-
+    console.log("ccc");
     return savedReply
   }
 
@@ -246,25 +261,7 @@ export class FeedbackService {
     for(let i =0; i < totalAmount.length; i++) {
       total = total + totalAmount[i];
     }
-    console.log(total)
     const averagePrice = total / rooms.length;
-    console.log(averagePrice)
-
-    // let totalAmount: string[] = []
-    // rooms.forEach(room => {
-    //   totalAmount.push(room.)
-    // })
-    // const stringCount: { [key: string]: number } = {};
-    // let maxCount = 0;
-    // let mostFrequentString = null;
-
-    // strings.forEach(str => {
-    //   stringCount[str] = (stringCount[str] || 0) + 1;
-    //   if (stringCount[str] > maxCount) {
-    //     maxCount = stringCount[str];
-    //     mostFrequentString = str;
-    //   }
-    // });
     return averagePrice;
   }
 }

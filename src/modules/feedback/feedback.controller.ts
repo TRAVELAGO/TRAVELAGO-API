@@ -57,14 +57,7 @@ export class FeedbackController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @Get(':idHotel')
-  @Roles(RoleType.HOTEL)
-  async hotelGetAllFeedbacks(@Param('idHotel') idHotel: string): Promise<Feedback[]> {
-    return this.feedbackService.hotelGetAllFeedbacks(idHotel);
-  }
-
-  @UseGuards(JwtAuthGuard)
-  @Get(':idHotel/reply/:feedbackId')
+  @Post(':idHotel/reply/:feedbackId')
   @Roles(RoleType.HOTEL)
   async replyFeedback(
     @Param('feedbackId') feedbackId: string,
@@ -73,6 +66,16 @@ export class FeedbackController {
     return this.feedbackService.hotelReplyFeedbacks(feedbackId, hotelId, replyFeedback);
   }
 
+  @UseGuards(JwtAuthGuard)
+  @Roles(RoleType.HOTEL)
+  @Post(':idUserHotel')
+  async hotelGetAllFeedbacks(@Param('idUser') idUser: string): Promise<Feedback[]> {
+    console.log("aaa")
+    return this.feedbackService.hotelGetAllFeedbacks(idUser);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Roles(RoleType.USER)
   @Get(':userId/getSuggestedRooms')
   async getSuggestedRooms(@Param('userId') userId: string) {
     const rooms = await this.feedbackService.getSuggestedRooms(userId);
