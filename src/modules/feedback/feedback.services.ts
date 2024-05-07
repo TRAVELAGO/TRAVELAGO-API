@@ -179,46 +179,45 @@ export class FeedbackService {
 
   async getSuggestedRooms(userId: string): Promise<Room[]> {
     const bookedRoomIds = await this.getBookedRoomIds(userId);
-    console.log("180s")
     const bookedRooms = await this.roomRepository
       .createQueryBuilder('room')
       .whereInIds(bookedRoomIds)
       .innerJoinAndSelect('room.hotel', 'hotel')
       .getMany();
-    console.log("184")
-    console.log(bookedRooms)
+//     console.log("184")
+//     console.log(bookedRooms)
 
-    const hotelEntities: Hotel[] = bookedRooms.map(room => room.hotel);
+//     const hotelEntities: Hotel[] = bookedRooms.map(room => room.hotel);
 
-    const hotelIds: string[] = bookedRooms.map(room => room.hotel.id);
-    console.log(hotelIds);
+//     const hotelIds: string[] = bookedRooms.map(room => room.hotel.id);
+//     console.log(hotelIds);
 
-    const citiess = await this.hotelRepository
-      .createQueryBuilder('hotel')
-      .innerJoinAndSelect('hotel.city', 'city')
-      .whereInIds(hotelIds)
-      .getMany();
+//     const citiess = await this.hotelRepository
+//       .createQueryBuilder('hotel')
+//       .innerJoinAndSelect('hotel.city', 'city')
+//       .whereInIds(hotelIds)
+//       .getMany();
 
-    console.log(citiess)
-    console.log("189")
+//     console.log(citiess)
+//     console.log("189")
 
-const cityNames: string[] = citiess.map(hotel => hotel.city.name);
+// const cityNames: string[] = citiess.map(hotel => hotel.city.name);
 
-console.log(cityNames);
+// console.log(cityNames);
 
-    console.log("192")
-    console.log(cityNames);
+//     console.log("192")
+//     console.log(cityNames);
     const averagePrice = this.calculateAveragePrice(bookedRooms);
     console.log(averagePrice)
-    console.log("187")
+    const threshold = 30000;
+
     const suggestedRooms = await this.roomRepository
       .createQueryBuilder('room')
       .where('ABS(room.price - :averagePrice) < :threshold', {
         averagePrice: averagePrice,
-        threshold: averagePrice * 0.1,
+        threshold: threshold,
       })
       .getMany();
-    console.log("195")
     return suggestedRooms;
   }
 
@@ -266,6 +265,6 @@ console.log(cityNames);
     //     mostFrequentString = str;
     //   }
     // });
-    return 1;
+    return averagePrice;
   }
 }
