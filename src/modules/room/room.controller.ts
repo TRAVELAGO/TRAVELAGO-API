@@ -10,7 +10,6 @@ import {
   Post,
   Query,
   UploadedFiles,
-  UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { ApiConsumes, ApiResponse, ApiTags } from '@nestjs/swagger';
@@ -20,13 +19,11 @@ import { UpdateRoomDto } from './dtos/update-room.dto';
 import { Room } from './room.entity';
 import { JwtPayloadType } from '@modules/auth/strategies/types/jwt-payload.type';
 import { SearchRoomDto } from './dtos/search-room.dto';
-import { RoleType } from '@constants/role-type';
 import { GetJwtPayload } from '@decorators/get-jwt-payload.decorator';
-import { Roles } from '@decorators/roles.decorator';
 import { PageDto } from 'src/common/dtos/page.dto';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { imageFilter } from 'src/utils/multer-file-filter';
-import { ActiveHotelGuard } from '@modules/auth/guards/active-hotel.guard';
+import { ActiveHotel } from '@decorators/active-hotel.decorator';
 
 @ApiTags('Rooms')
 @Controller()
@@ -59,8 +56,7 @@ export class RoomController {
   @ApiConsumes('multipart/form-data')
   @ApiResponse({ status: 201, description: 'Create room successfully.' })
   @ApiResponse({ status: 400, description: 'Validation failure.' })
-  @Roles(RoleType.HOTEL)
-  @UseGuards(ActiveHotelGuard)
+  @ActiveHotel()
   @UseInterceptors(
     FileFieldsInterceptor([{ name: 'images' }], { fileFilter: imageFilter }),
   )
@@ -87,8 +83,7 @@ export class RoomController {
   @ApiResponse({ status: 400, description: 'Validation failure.' })
   @ApiResponse({ status: 404, description: 'Room does not exist.' })
   @ApiResponse({ status: 404, description: 'Room Type does not exist.' })
-  @Roles(RoleType.HOTEL)
-  @UseGuards(ActiveHotelGuard)
+  @ActiveHotel()
   @UseInterceptors(
     FileFieldsInterceptor([{ name: 'images' }], { fileFilter: imageFilter }),
   )
@@ -113,8 +108,7 @@ export class RoomController {
   @ApiResponse({ status: 204, description: 'Delete room successfully.' })
   @ApiResponse({ status: 404, description: 'Room not found.' })
   @HttpCode(HttpStatus.NO_CONTENT)
-  @Roles(RoleType.HOTEL)
-  @UseGuards(ActiveHotelGuard)
+  @ActiveHotel()
   async delete(
     @GetJwtPayload() user: JwtPayloadType,
     @Param('id') roomId: string,
