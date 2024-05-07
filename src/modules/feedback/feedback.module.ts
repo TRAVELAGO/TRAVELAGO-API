@@ -6,6 +6,7 @@ import { FeedbackService } from './feedback.services';
 import { HotelModule } from '@modules/hotel/hotel.module';
 import { BookingModule } from '@modules/booking/booking.module';
 import { RoomModule } from '@modules/room/room.module';
+import { CityModule } from '@modules/city/city.module';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Feedback]), HotelModule, BookingModule, RoomModule],

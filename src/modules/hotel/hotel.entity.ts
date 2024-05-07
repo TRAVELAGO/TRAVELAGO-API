@@ -73,6 +73,7 @@ export class Hotel {
   user: User;
 
   @ManyToOne(() => City, (city) => city.hotels)
+  @JoinColumn({ name: 'cityId' })
   city: City;
 
   @OneToMany(() => Room, (room) => room.hotel)

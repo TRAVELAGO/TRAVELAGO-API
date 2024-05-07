@@ -19,7 +19,7 @@ import { ReplyFeedbackDto } from './dtos/feedbackHotelReply.Dto';
 @ApiTags('Feedback')
 @Controller('feedback')
 export class FeedbackController {
-  constructor(private readonly feedbackService: FeedbackService) {}
+  constructor(private readonly feedbackService: FeedbackService) { }
 
   @UseGuards(JwtAuthGuard)
   @Get(':idUser')
@@ -71,5 +71,11 @@ export class FeedbackController {
     @Param('hotelId') hotelId: string,
     @Body() replyFeedback: ReplyFeedbackDto,) {
     return this.feedbackService.hotelReplyFeedbacks(feedbackId, hotelId, replyFeedback);
+  }
+
+  @Get(':userId/getSuggestedRooms')
+  async getSuggestedRooms(@Param('userId') userId: string) {
+    const rooms = await this.feedbackService.getSuggestedRooms(userId);
+    return rooms;
   }
 }
