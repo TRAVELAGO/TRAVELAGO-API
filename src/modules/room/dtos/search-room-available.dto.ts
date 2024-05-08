@@ -1,8 +1,9 @@
 import { IsDateFormat } from '@decorators/is-date-format.decorator';
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsNotEmpty, IsOptional } from 'class-validator';
+import { ApiProperty } from '@nestjs/swagger';
+import { IsNotEmpty } from 'class-validator';
+import { SearchRoomDto } from './search-room.dto';
 
-export class CreateBookingDto {
+export class SearchRoomAvailableDto extends SearchRoomDto {
   @ApiProperty({
     default: '2024-05-14',
   })
@@ -16,12 +17,4 @@ export class CreateBookingDto {
   @IsDateFormat()
   @IsNotEmpty()
   readonly dateTo: string;
-
-  @ApiProperty()
-  @IsNotEmpty()
-  readonly roomId: string;
-
-  @ApiPropertyOptional()
-  @IsOptional()
-  readonly voucherId?: string;
 }

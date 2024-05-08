@@ -21,7 +21,6 @@ import {
 import { Booking } from './booking.entity';
 import { CreateBookingDto } from './dtos/create-booking.dto';
 import { BookingStatus } from '@constants/booking-status';
-import { addTime } from 'src/utils/date';
 import { JwtPayloadType } from '@modules/auth/strategies/types/jwt-payload.type';
 import { isHotel, isUser } from 'src/utils/roles';
 import { SearchBookingDto } from './dtos/search-booking.dto';
@@ -33,12 +32,18 @@ import { BookingType } from '@constants/booking-type';
 import { Room } from '@modules/room/room.entity';
 import { addMinutes, differenceInCalendarDays } from 'date-fns';
 import { VNPayService } from '@shared/services/vnpay.services';
-import { REDIS_HASH_BOOKING_KEY, MAX_PAYMENT_TIME } from '@constants/constants';
+import {
+  REDIS_HASH_BOOKING_KEY,
+  MAX_PAYMENT_TIME,
+  VN_TIME_ZONE,
+} from '@constants/constants';
 import { Cache } from 'cache-manager';
 import { RedisService } from '@modules/redis/redis.service';
 import { Voucher } from '@modules/voucher/voucher.entity';
 import { VoucherType } from '@constants/voucher-type';
 import { MailService } from '@modules/mail/mail.service';
+import { fromZonedTime } from 'date-fns-tz';
+import { addTime } from 'src/utils/date';
 
 @Injectable()
 export class BookingService {
@@ -158,20 +163,13 @@ export class BookingService {
       throw new BadRequestException('dateTo must be greater than dateFrom.');
     }
 
-    // add time check in
-    const dateFrom = addTime(
-      createBookingDto.dateFrom,
+    const dateFromAfterFormat = addTime(
+      fromZonedTime(new Date(createBookingDto.dateFrom), VN_TIME_ZONE),
       existedRoom.hotel.checkInTime,
     );
 
-    // add time check out
-    const dateTo = addTime(
-      createBookingDto.dateTo,
-      existedRoom.hotel.checkOutTime,
-    );
-
     // dateFrom needs to be greater than now
-    if (dateFrom < new Date()) {
+    if (dateFromAfterFormat < new Date()) {
       throw new BadRequestException('dateFrom and dateTo are not valid.');
     }
 
@@ -180,8 +178,8 @@ export class BookingService {
       await this.checkConflictBookingTime(
         existedRoom.id,
         existedRoom.total,
-        dateFrom,
-        dateTo,
+        createBookingDto.dateFrom,
+        createBookingDto.dateTo,
       )
     ) {
       throw new ConflictException('The room has been booked at this time');
@@ -207,8 +205,8 @@ export class BookingService {
       totalDiscount: 0,
       status: isHotelRole ? BookingStatus.CHECK_IN : BookingStatus.NEW,
       type: isHotelRole ? BookingType.DIRECTLY : BookingType.ONLINE,
-      dateFrom,
-      dateTo,
+      dateFrom: createBookingDto.dateFrom,
+      dateTo: createBookingDto.dateTo,
     });
 
     return newBooking;
@@ -345,7 +343,7 @@ export class BookingService {
         bookingStatus !== BookingStatus.CANCEL ||
         (existedBooking.status !== BookingStatus.NEW &&
           existedBooking.status !== BookingStatus.PAID) ||
-        existedBooking.dateFrom < new Date())
+        differenceInCalendarDays(existedBooking.dateFrom, new Date()) < 0)
     ) {
       throw new ForbiddenException();
     }
@@ -357,7 +355,8 @@ export class BookingService {
         (existedBooking.type === BookingType.ONLINE &&
           (bookingStatus !== BookingStatus.CHECK_IN ||
             existedBooking.status !== BookingStatus.PAID ||
-            existedBooking.dateFrom > new Date())) ||
+            differenceInCalendarDays(existedBooking.dateFrom, new Date()) >=
+              0)) ||
         // Allow hotel to cancel booking directly
         (existedBooking.type === BookingType.DIRECTLY &&
           bookingStatus !== BookingStatus.CANCEL))
@@ -405,8 +404,8 @@ export class BookingService {
   private async checkConflictBookingTime(
     roomId: string,
     totalRoom: number,
-    dateFrom: Date,
-    dateTo: Date,
+    dateFrom: string,
+    dateTo: string,
   ): Promise<boolean> {
     return (
       totalRoom <=

@@ -36,3 +36,26 @@ export function findInJsonArray(value: string, dbType: string): any {
     })
   );
 }
+
+export function getQueryInJsonArray(
+  columnAlias: string,
+  value: string,
+  dbType: string,
+): any {
+  const searchArray = value.split(',');
+  let result;
+
+  searchArray &&
+    (dbType === 'mysql'
+      ? searchArray.forEach((value, i) => {
+          if (i === 0) {
+            result = `JSON_CONTAINS(${columnAlias}, '"${value}"', '$')`;
+            // result = JSON_SEARCH(${columnAlias}, 'one', '${value}', NULL, '$[*]') IS NOT NULL
+          } else {
+            result += ` AND JSON_CONTAINS(${columnAlias}, '"${value}"', '$')`;
+          }
+        })
+      : (result = `${columnAlias} ::jsonb @> '${JSON.stringify(searchArray)}'::jsonb`));
+
+  return result ?? 1;
+}

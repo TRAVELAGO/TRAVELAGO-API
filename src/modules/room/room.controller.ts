@@ -24,6 +24,7 @@ import { PageDto } from 'src/common/dtos/page.dto';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { imageFilter } from 'src/utils/multer-file-filter';
 import { ActiveHotel } from '@decorators/active-hotel.decorator';
+import { SearchRoomAvailableDto } from './dtos/search-room-available.dto';
 
 @ApiTags('Rooms')
 @Controller()
@@ -41,6 +42,18 @@ export class RoomController {
   @ApiResponse({ status: 200, description: 'Successfully.' })
   async search(@Query() searchRoomDto: SearchRoomDto): Promise<PageDto<Room>> {
     return this.roomService.search(searchRoomDto);
+  }
+
+  @Get('hotels/:hotelId/rooms/available')
+  @ApiResponse({ status: 200, description: 'Successfully.' })
+  async searchHotelRoomAvailable(
+    @Param('hotelId') hotelId: string,
+    @Query() searchRoomAvailableDto: SearchRoomAvailableDto,
+  ): Promise<PageDto<Room>> {
+    return this.roomService.SearchRoomAvailable(
+      searchRoomAvailableDto,
+      hotelId,
+    );
   }
 
   @Get('hotels/:hotelId/rooms')

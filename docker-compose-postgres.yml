@@ -47,6 +47,10 @@ services:
       - ADMINER_DEFAULT_SERVER=postgres
     ports:
       - 8080:8080
+    depends_on:
+       - postgres
+    networks:
+      - travelago-net
   # pgadmin:
   #   image: dpage/pgadmin4
   #   container_name: pgadmin
