@@ -1,4 +1,4 @@
-import { EntityTarget, FindManyOptions } from 'typeorm';
+import { EntityTarget, FindManyOptions, SelectQueryBuilder } from 'typeorm';
 import { checkPropertyOfEntity } from './check-property';
 import { Order } from '@constants/order';
 import { Cache } from 'cache-manager';
@@ -44,8 +44,48 @@ export async function getOrderOption<T>(
   ) {
     orderOption.order = {};
     orderOption.order[column] = direction;
-    column !== 'id' && (orderOption.order['id'] = Order.ASC);
+    column.toUpperCase() !== 'ID' && (orderOption.order['id'] = Order.ASC);
   }
 
   return orderOption;
+}
+
+export function addPaginationQuery(
+  query: SelectQueryBuilder<any>,
+  pageNumber?: number,
+  pageSize?: number,
+) {
+  if (pageNumber && pageSize) {
+    pageNumber = pageNumber < 1 ? 1 : pageNumber;
+
+    query.limit(pageSize).offset((pageNumber - 1) * pageSize);
+  }
+}
+
+export async function addOrderQuery(
+  query: SelectQueryBuilder<any>,
+  order: string,
+  filterOrderColumn: string[],
+) {
+  if (!order || typeof order !== 'string') {
+    return {};
+  }
+
+  const [column, direction] = order.split(',');
+  console.log(column, filterOrderColumn.includes(column));
+  if (!filterOrderColumn.includes(column)) {
+    return;
+  }
+
+  let orderDirection: Order;
+  if (direction.toUpperCase() === Order.ASC) {
+    orderDirection = Order.ASC;
+  } else if (direction.toUpperCase() === Order.DESC) {
+    orderDirection = Order.DESC;
+  } else {
+    return;
+  }
+
+  query.orderBy(column, orderDirection);
+  column.toUpperCase() !== 'ID' && query.addOrderBy('id', Order.ASC);
 }

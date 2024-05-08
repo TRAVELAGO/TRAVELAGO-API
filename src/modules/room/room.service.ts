@@ -1,3 +1,4 @@
+import { SearchRoomAvailableDto } from './dtos/search-room-available.dto';
 import { UpdateRoomDto } from './dtos/update-room.dto';
 import { Hotel } from '@modules/hotel/hotel.entity';
 import {
@@ -8,18 +9,24 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import {
+  DataSource,
   FindManyOptions,
   FindOptionsWhere,
   Like,
   MoreThanOrEqual,
   Repository,
+  WhereExpressionBuilder,
 } from 'typeorm';
 import { Room } from './room.entity';
 import { CreateRoomDto } from './dtos/create-room.dto';
 import { RoomType } from '@modules/room-type/room-type.entity';
 import { getOrderOption, getPaginationOption } from 'src/utils/pagination';
 import { SearchRoomDto } from './dtos/search-room.dto';
-import { between, findInJsonArray } from 'src/utils/find-option';
+import {
+  between,
+  findInJsonArray,
+  getQueryInJsonArray,
+} from 'src/utils/find-option';
 import { PageDto } from 'src/common/dtos/page.dto';
 import { PageMetaDto } from 'src/common/dtos/page-meta.dto';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
@@ -27,15 +34,17 @@ import { Cache } from 'cache-manager';
 import { ConfigService } from '@nestjs/config';
 import { FilesService } from '@modules/files/files.service';
 import { Booking } from '@modules/booking/booking.entity';
+import { BookingStatus } from '@constants/booking-status';
 
 @Injectable()
 export class RoomService {
   constructor(
     @InjectRepository(Room) private roomRepository: Repository<Room>,
-    @InjectRepository(RoomType) private roomTypeRepository: Repository<RoomType>,
+    @InjectRepository(RoomType)
+    private roomTypeRepository: Repository<RoomType>,
     @InjectRepository(Hotel) private hotelRepository: Repository<Hotel>,
-    // @InjectRepository(Booking) private bookingRepository: Repository<Booking>,
-    @Inject(CACHE_MANAGER) private cacheManager: Cache, 
+    @Inject(CACHE_MANAGER) private cacheManager: Cache,
+    private dataSource: DataSource,
     private configService: ConfigService,
     private filesService: FilesService,
   ) {}
@@ -84,6 +93,41 @@ export class RoomService {
 
     // add data to PageDto
     return new PageDto(rooms, pageMetaDto);
+  }
+
+  async SearchRoomAvailable(
+    searchRoomAvailableDto: SearchRoomAvailableDto,
+    hotelId: string,
+  ): Promise<any> {
+    console.log(searchRoomAvailableDto, hotelId);
+    // return { searchRoomAvailableDto, hotelId };
+    const rooms = await this.dataSource
+      .createQueryBuilder()
+      .select('COUNT(booking.id)', 'totalBooking')
+      .addSelect('r.*')
+      .from(Room, 'r')
+      .leftJoin(
+        this.subQueryFactoryGetBooking(
+          searchRoomAvailableDto.dateFrom,
+          searchRoomAvailableDto.dateTo,
+        ),
+        'booking',
+        'r.id = booking.roomId',
+      )
+      .where(this.searchRoomCondition(searchRoomAvailableDto, hotelId))
+      .groupBy('r.id')
+      .having('totalBooking < r.total')
+      .getRawMany();
+
+    return rooms;
+    // create metadata
+    // const pageMetaDto = new PageMetaDto({
+    //   itemCount,
+    //   pageOptionsDto: searchRoomDto,
+    // });
+
+    // add data to PageDto
+    // return new PageDto(rooms, pageMetaDto);
   }
 
   async create(
@@ -194,6 +238,82 @@ export class RoomService {
     }
   }
 
+  public subQueryFactoryGetBooking =
+    (dateFrom: string, dateTo: string) => (subQuery) =>
+      subQuery
+        .select('bk.id', 'id')
+        .addSelect('bk.roomId', 'roomId')
+        .from(Booking, 'bk')
+        .where(
+          `((bk.dateFrom <= :dateFrom AND bk.dateTo > :dateFrom) 
+              OR (bk.dateFrom < :dateTo AND bk.dateTo >= :dateTo) 
+              OR (bk.dateFrom > :dateFrom AND bk.dateTo < :dateTo))`,
+          {
+            dateFrom,
+            dateTo,
+          },
+        )
+        .andWhere('bk.status <> :bookingStatus', {
+          bookingStatus: BookingStatus.CANCEL,
+        });
+
+  public searchRoomCondition(
+    searchRoomDto: SearchRoomDto,
+    hotelId: string = null,
+  ) {
+    return (qb: WhereExpressionBuilder) => {
+      qb.andWhere('guestNumber >= :guestNumber', {
+        guestNumber: searchRoomDto.guestNumber,
+      });
+
+      searchRoomDto.priceFrom &&
+        qb.andWhere('price >= :priceFrom', {
+          priceFrom: searchRoomDto.priceFrom,
+        });
+
+      searchRoomDto.priceTo &&
+        qb.andWhere('price <= :priceTo', {
+          priceTo: searchRoomDto.priceTo,
+        });
+
+      searchRoomDto.areaFrom &&
+        qb.andWhere('area >= :areaFrom', {
+          areaFrom: searchRoomDto.areaFrom,
+        });
+
+      searchRoomDto.areaTo &&
+        qb.andWhere('area <= :areaTo', {
+          areaTo: searchRoomDto.areaTo,
+        });
+
+      searchRoomDto.rate &&
+        qb.andWhere('rate >= :rate', {
+          rate: searchRoomDto.rate,
+        });
+
+      searchRoomDto.roomAmenities &&
+        qb.andWhere(
+          getQueryInJsonArray(
+            'roomAmenities',
+            searchRoomDto.roomAmenities,
+            this.configService.get<string>('DB_TYPE'),
+          ),
+        );
+
+      searchRoomDto.name && qb.andWhere(`name LIKE '%${searchRoomDto.name}%'`);
+
+      searchRoomDto.roomTypeId &&
+        qb.andWhere('roomTypeId = :roomTypeId', {
+          roomTypeId: searchRoomDto.roomTypeId,
+        });
+
+      hotelId &&
+        qb.andWhere('hotelId = :hotelId', {
+          hotelId,
+        });
+    };
+  }
+
   private async checkHotelExists(
     userId: string,
     roomId: string,
@@ -220,7 +340,6 @@ export class RoomService {
       name: searchRoomDto.name && Like(`%${searchRoomDto.name}%`),
       price: between(searchRoomDto.priceFrom, searchRoomDto.priceTo),
       area: between(searchRoomDto.areaFrom, searchRoomDto.areaTo),
-      total: searchRoomDto.total,
       rate: searchRoomDto.rate && MoreThanOrEqual(searchRoomDto.rate),
       roomType: searchRoomDto.roomTypeId && {
         id: searchRoomDto.roomTypeId,
@@ -229,6 +348,8 @@ export class RoomService {
         searchRoomDto.roomAmenities,
         this.configService.get<string>('DB_TYPE'),
       ),
+      guestNumber:
+        searchRoomDto.guestNumber && MoreThanOrEqual(searchRoomDto.guestNumber),
     };
 
     return {

@@ -1,27 +1,23 @@
 import { BookingStatus } from '@constants/booking-status';
+import { IsDateFormat } from '@decorators/is-date-format.decorator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { Transform } from 'class-transformer';
-import {
-  IsDate,
-  IsEmail,
-  IsEnum,
-  IsOptional,
-  IsPhoneNumber,
-} from 'class-validator';
+import { IsEmail, IsEnum, IsOptional, IsPhoneNumber } from 'class-validator';
 import { PageOptionsDto } from 'src/common/dtos/page-option.dto';
 
 export class SearchBookingDto extends PageOptionsDto {
-  @ApiPropertyOptional()
-  @Transform(({ value }) => new Date(value))
-  @IsDate()
+  @ApiPropertyOptional({
+    default: '2024-05-14',
+  })
+  @IsDateFormat()
   @IsOptional()
-  readonly dateFrom?: Date;
+  readonly dateFrom: string;
 
-  @ApiPropertyOptional()
-  @Transform(({ value }) => new Date(value))
-  @IsDate()
+  @ApiPropertyOptional({
+    default: '2024-05-15',
+  })
+  @IsDateFormat()
   @IsOptional()
-  readonly dateTo?: Date;
+  readonly dateTo: string;
 
   @ApiPropertyOptional()
   @IsEnum(BookingStatus)

@@ -1,3 +1,5 @@
+import { ConfigService } from '@nestjs/config';
+import { SearchHotelDto } from './dtos/search-hotel.dto';
 import {
   BadRequestException,
   ForbiddenException,
@@ -6,18 +8,25 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { Hotel } from '@modules/hotel/hotel.entity';
 import { HotelDto } from './dtos/hotel.dto';
 import { HotelStatus } from '@constants/hotel-status';
 import { UpdateHotelDto } from './dtos/update-hotel.dto';
 import { FilesService } from '@modules/files/files.service';
+import { Room } from '@modules/room/room.entity';
+import { getFileObjects } from 'src/utils/files';
+import { addOrderQuery, addPaginationQuery } from 'src/utils/pagination';
+import { RoomService } from '@modules/room/room.service';
 
 @Injectable()
 export class HotelService {
   constructor(
     @InjectRepository(Hotel) private hotelRepository: Repository<Hotel>,
+    private dataSource: DataSource,
     private filesService: FilesService,
+    private roomService: RoomService,
+    private configService: ConfigService,
   ) {}
 
   async findAll(): Promise<Hotel[]> {
@@ -126,7 +135,98 @@ export class HotelService {
 
     return this.hotelRepository.save(createdHotel);
   }
+
+  async searchNearestHotel(searchHotelDto: SearchHotelDto): Promise<any> {
+    const query = this.dataSource
+      .createQueryBuilder()
+      .select('MIN(RoomAvailable.price)', 'minRoomPrice')
+      .addSelect('nearestHotel.*')
+      .from(
+        this.subQueryFactoryNearestHotel(
+          searchHotelDto.longitude,
+          searchHotelDto.latitude,
+          searchHotelDto.maxDistance,
+        ),
+        'nearestHotel',
+      )
+      .innerJoin(
+        (subQuery) => {
+          return subQuery
+            .select('COUNT(b.id)', 'totalBooking')
+            .addSelect('r.id', 'roomId')
+            .addSelect('r.total', 'total')
+            .addSelect('r.price', 'price')
+            .addSelect('r.hotelId', 'hotelId')
+            .from(Room, 'r')
+            .leftJoin(
+              this.roomService.subQueryFactoryGetBooking(
+                searchHotelDto.dateFrom,
+                searchHotelDto.dateTo,
+              ),
+              'b',
+              'r.id = b.roomId',
+            )
+            .where(this.roomService.searchRoomCondition(searchHotelDto))
+            .groupBy('r.id')
+            .having(
+              `${this.configService.get('DB_TYPE') === 'mysql' ? 'totalBooking' : 'COUNT(b.id)'} < r.total`,
+            );
+        },
+        'roomAvailable',
+        'roomAvailable.hotelId = nearestHotel.id',
+      )
+      .groupBy('nearestHotel.id');
+
+    addOrderQuery(query, searchHotelDto.order, [
+      'id',
+      'rate',
+      'distance',
+      'minRoomPrice',
+    ]);
+
+    addPaginationQuery(
+      query,
+      searchHotelDto.pageNumber,
+      searchHotelDto.pageSize,
+    );
+
+    const nearestHotels = await query.getRawMany();
+
+    nearestHotels.forEach((nearestHotel) => {
+      nearestHotel.images = getFileObjects(nearestHotel.images);
+    });
+
+    return nearestHotels;
+  }
+
   async findHotelsByCity(cityId: string): Promise<Hotel[]> {
     return this.hotelRepository.find({ where: { city: { id: cityId } } });
   }
+
+  private subQueryFactoryNearestHotel =
+    (longitude, latitude, maxDistance) => (subQuery) => {
+      subQuery
+        .select('h.*')
+        .addSelect(
+          this.configService.get('DB_TYPE') === 'mysql'
+            ? 'ST_Distance_Sphere(POINT(:longitude, :latitude), POINT(longitude, latitude)) * 0.001'
+            : 'SQRT(POW(69.1 * (latitude::numeric - :latitude), 2) + POW(69.1 * (:longitude - longitude::numeric) * COS(latitude::numeric / 57.3), 2)) * 1.60934',
+          'distance',
+        )
+        .from(Hotel, 'h')
+        .where('h.status = :hotelStatus', { hotelStatus: HotelStatus.OPEN });
+
+      this.configService.get('DB_TYPE') === 'mysql' &&
+        subQuery.having('distance <= :maxDistance');
+
+      this.configService.get('DB_TYPE') === 'postgres' &&
+        subQuery.andWhere(
+          'SQRT(POW(69.1 * (latitude::numeric - :latitude), 2) + POW(69.1 * (:longitude - longitude::numeric) * COS(latitude::numeric / 57.3), 2)) * 1.60934  <= :maxDistance',
+        );
+
+      return subQuery
+        .setParameter('longitude', longitude)
+        .setParameter('latitude', latitude)
+        .setParameter('maxDistance', maxDistance);
+    };
 }

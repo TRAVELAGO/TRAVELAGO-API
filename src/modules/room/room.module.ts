@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { RoomController } from './room.controller';
 import { RoomService } from './room.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -9,7 +9,11 @@ import { HotelModule } from '@modules/hotel/hotel.module';
 import { BookingModule } from '@modules/booking/booking.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Room]), RoomTypeModule, HotelModule],
+  imports: [
+    TypeOrmModule.forFeature([Room]),
+    RoomTypeModule,
+    forwardRef(() => HotelModule),
+  ],
   controllers: [RoomController],
   providers: [RoomService, JwtStrategy],
   exports: [RoomService, TypeOrmModule],

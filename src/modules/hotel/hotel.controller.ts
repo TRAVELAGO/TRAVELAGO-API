@@ -1,3 +1,4 @@
+import { SearchHotelDto } from './dtos/search-hotel.dto';
 import {
   Controller,
   Post,
@@ -8,6 +9,7 @@ import {
   Delete,
   UseInterceptors,
   UploadedFiles,
+  Query,
 } from '@nestjs/common';
 import { HotelService } from './hotel.services';
 import { Hotel } from '@modules/hotel/hotel.entity';
@@ -28,6 +30,13 @@ export class HotelController {
   @Get()
   async findAll(): Promise<Hotel[]> {
     return this.hotelService.findAll();
+  }
+
+  @Get('search')
+  async searchNearestHotel(
+    @Query() searchHotelDto: SearchHotelDto,
+  ): Promise<any> {
+    return this.hotelService.searchNearestHotel(searchHotelDto);
   }
 
   @Get(':id')

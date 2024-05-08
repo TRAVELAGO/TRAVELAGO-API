@@ -27,11 +27,11 @@ export class Booking {
   @Column({ default: BookingType.ONLINE })
   type: BookingType;
 
-  @Column({ type: 'timestamp' })
-  dateFrom: Date;
+  @Column({ type: 'date' })
+  dateFrom: string;
 
-  @Column({ type: 'timestamp' })
-  dateTo: Date;
+  @Column({ type: 'date' })
+  dateTo: string;
 
   @Column({ type: 'decimal', precision: 10, scale: 2 })
   totalAmount: number;
