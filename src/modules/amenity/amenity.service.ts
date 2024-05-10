@@ -10,6 +10,10 @@ export class AmenityService {
     private readonly amenityRepository: Repository<Amenity>,
   ) {}
 
+  async getAll(): Promise<Amenity[]> {
+    return this.amenityRepository.find();
+  }
+
   async seedData(): Promise<void> {
     // Tạo dữ liệu mới
     const Amenities = [

@@ -21,11 +21,21 @@ import { UpdateHotelDto } from './dtos/update-hotel.dto';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { imageFilter } from 'src/utils/multer-file-filter';
 import { ActiveHotel } from '@decorators/active-hotel.decorator';
+import { Roles } from '@decorators/roles.decorator';
+import { RoleType } from '@constants/role-type';
 
 @ApiTags('Hotel')
 @Controller('hotels')
 export class HotelController {
   constructor(private hotelService: HotelService) {}
+
+  @Get('owner')
+  @Roles(RoleType.HOTEL)
+  async getHotelByUserId(
+    @GetJwtPayload() jwtPayload: JwtPayloadType,
+  ): Promise<Hotel[]> {
+    return this.hotelService.findHotelByUserId(jwtPayload.id);
+  }
 
   @Get()
   async findAll(): Promise<Hotel[]> {

@@ -2,13 +2,20 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { City } from './city.entity';
+import { Country } from '@modules/country/country.entity';
 
 @Injectable()
 export class CityService {
   constructor(
     @InjectRepository(City)
     private cityRepository: Repository<City>,
+    @InjectRepository(Country)
+    private countryRepository: Repository<Country>,
   ) {}
+
+  async getAll(): Promise<City[]> {
+    return this.cityRepository.find();
+  }
 
   async seedCities() {
     const cities = [
@@ -77,13 +84,16 @@ export class CityService {
       { name: 'Yên Bái', postalCode: '33000' },
     ];
 
+    const newCountry = await this.countryRepository.save({
+      name: 'Việt Nam',
+    });
+
     for (const cityData of cities) {
       const city = new City();
       city.name = cityData.name;
       city.postalCode = cityData.postalCode;
+      city.country = newCountry;
       await this.cityRepository.save(city);
     }
-
-    console.log('city success');
   }
 }
