@@ -11,7 +11,6 @@ export class ActiveHotelGuard implements CanActivate {
     const request = context.switchToHttp().getRequest();
     const user: JwtPayloadType = request.user;
 
-    return true;
     return (
       user &&
       (user.role !== RoleType.HOTEL || user.status !== UserStatus.WAIT_ACTIVE)
