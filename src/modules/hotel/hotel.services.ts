@@ -29,6 +29,13 @@ export class HotelService {
     private configService: ConfigService,
   ) {}
 
+  async findHotelByUserId(userId: string): Promise<Hotel[]> {
+    return this.hotelRepository
+      .createQueryBuilder('h')
+      .where('userId = :userId', { userId })
+      .getMany();
+  }
+
   async findAll(): Promise<Hotel[]> {
     return this.hotelRepository.find();
   }
