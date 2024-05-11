@@ -99,8 +99,6 @@ export class RoomService {
     searchRoomAvailableDto: SearchRoomAvailableDto,
     hotelId: string,
   ): Promise<any> {
-    console.log(searchRoomAvailableDto, hotelId);
-    // return { searchRoomAvailableDto, hotelId };
     const rooms = await this.dataSource
       .createQueryBuilder()
       .select('COUNT(booking.id)', 'totalBooking')

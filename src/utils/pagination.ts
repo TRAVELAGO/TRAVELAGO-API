@@ -72,7 +72,7 @@ export async function addOrderQuery(
   }
 
   const [column, direction] = order.split(',');
-  console.log(column, filterOrderColumn.includes(column));
+
   if (!filterOrderColumn.includes(column)) {
     return;
   }

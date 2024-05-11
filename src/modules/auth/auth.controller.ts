@@ -20,7 +20,7 @@ import { GetJwtPayload } from '@decorators/get-jwt-payload.decorator';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { JwtPayloadType } from './strategies/types/jwt-payload.type';
 import { ForgotPasswordDto } from './dtos/forgot-password.dto';
-import { OtpDto } from './dtos/Otp.dto';
+import { OtpDto } from './dtos/otp.dto';
 import { RoleType } from '@constants/role-type';
 
 @ApiTags('Auth')

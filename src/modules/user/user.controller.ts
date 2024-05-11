@@ -6,6 +6,8 @@ import {
   UseInterceptors,
   Patch,
   UploadedFile,
+  HttpStatus,
+  HttpCode,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiConsumes, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '@modules/auth/guards/jwt-auth.guard';
@@ -16,6 +18,7 @@ import { imageFilter } from 'src/utils/multer-file-filter';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { GetJwtPayload } from '@decorators/get-jwt-payload.decorator';
 import { JwtPayloadType } from '@modules/auth/strategies/types/jwt-payload.type';
+import { ChangePasswordDto } from './dtos/change-password.dto';
 
 @ApiTags('User')
 @Controller('user')
@@ -39,21 +42,16 @@ export class userController {
   @Post('change-password')
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.OK)
   changePassword(
     @GetJwtPayload() jwtPayload: JwtPayloadType,
     @Body()
-    {
-      newPassword,
-      passwordConfirm,
-    }: {
-      newPassword: string;
-      passwordConfirm: string;
-    },
+    changePasswordDto: ChangePasswordDto,
   ): Promise<User> {
     return this.userService.changePassword(
       jwtPayload.id,
-      newPassword,
-      passwordConfirm,
+      changePasswordDto.oldPassword,
+      changePasswordDto.newPassword,
     );
   }
 }

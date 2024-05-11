@@ -19,7 +19,7 @@ import { ReplyFeedbackDto } from './dtos/feedbackHotelReply.Dto';
 @ApiTags('Feedback')
 @Controller('feedback')
 export class FeedbackController {
-  constructor(private readonly feedbackService: FeedbackService) { }
+  constructor(private readonly feedbackService: FeedbackService) {}
 
   @UseGuards(JwtAuthGuard)
   @Get(':idUser')
@@ -62,15 +62,21 @@ export class FeedbackController {
   async replyFeedback(
     @Param('feedbackId') feedbackId: string,
     @Param('hotelId') hotelId: string,
-    @Body() replyFeedback: ReplyFeedbackDto,) {
-    return this.feedbackService.hotelReplyFeedbacks(feedbackId, hotelId, replyFeedback);
+    @Body() replyFeedback: ReplyFeedbackDto,
+  ) {
+    return this.feedbackService.hotelReplyFeedbacks(
+      feedbackId,
+      hotelId,
+      replyFeedback,
+    );
   }
 
   @UseGuards(JwtAuthGuard)
   @Roles(RoleType.HOTEL)
   @Post(':idUserHotel')
-  async hotelGetAllFeedbacks(@Param('idUser') idUser: string): Promise<Feedback[]> {
-    console.log("aaa")
+  async hotelGetAllFeedbacks(
+    @Param('idUser') idUser: string,
+  ): Promise<Feedback[]> {
     return this.feedbackService.hotelGetAllFeedbacks(idUser);
   }
 
