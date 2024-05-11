@@ -1,9 +1,19 @@
 import { IsDateFormat } from '@decorators/is-date-format.decorator';
-import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty } from 'class-validator';
+import { ApiProperty, OmitType } from '@nestjs/swagger';
+import { IsInt, IsNotEmpty } from 'class-validator';
 import { SearchRoomDto } from './search-room.dto';
+import { Transform } from 'class-transformer';
 
-export class SearchRoomAvailableDto extends SearchRoomDto {
+export class SearchRoomAvailableDto extends OmitType(SearchRoomDto, [
+  'guestNumber',
+]) {
+  @ApiProperty({
+    default: 1,
+  })
+  @Transform(({ value }) => Number(value))
+  @IsInt()
+  readonly guestNumber: number;
+
   @ApiProperty({
     default: '2024-05-14',
   })

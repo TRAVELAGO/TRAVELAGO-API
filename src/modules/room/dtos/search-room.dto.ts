@@ -1,15 +1,16 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
 import { IsInt, IsOptional, Max, MaxLength, Min } from 'class-validator';
 import { PageOptionsDto } from 'src/common/dtos/page-option.dto';
 
 export class SearchRoomDto extends PageOptionsDto {
-  @ApiProperty({
+  @ApiPropertyOptional({
     default: 1,
   })
   @Transform(({ value }) => Number(value))
   @IsInt()
-  readonly guestNumber: number;
+  @IsOptional()
+  readonly guestNumber?: number;
 
   @ApiPropertyOptional()
   @MaxLength(100)
