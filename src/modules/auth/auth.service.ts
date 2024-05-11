@@ -24,7 +24,8 @@ import { getBlacklistKey } from 'src/utils/cache';
 import { UserStatus } from '@constants/user-status';
 import { MailService } from '@modules/mail/mail.service';
 import { MAX_VERIFY_OTP_TIME } from '@constants/constants';
-import { OtpDto } from './dtos/Otp.dto';
+import { OtpDto } from './dtos/otp.dto';
+import { hashPassword } from 'src/utils/hash';
 
 @Injectable()
 export class AuthService {
@@ -69,11 +70,11 @@ export class AuthService {
         throw new BadRequestException('Email has been verified.');
       }
 
-      const hashPassword = await this.hashPassword(registerDto.password);
+      const hashedPassword = await hashPassword(registerDto.password);
 
       const newUser = await this.userRepository.create({
         ...registerDto,
-        password: hashPassword,
+        password: hashedPassword,
         role: userRole,
         status:
           userRole === RoleType.USER
@@ -191,14 +192,6 @@ export class AuthService {
     return { accessToken, refreshToken };
   }
 
-  private async hashPassword(password: string): Promise<string> {
-    const saltRound = 10;
-    const salt = await bcrypt.genSalt(saltRound);
-    const hash = await bcrypt.hash(password, salt);
-
-    return hash;
-  }
-
   async forgotPassword(userEmail: string): Promise<void> {
     const existedUser = await this.userRepository.findOne({
       where: { email: userEmail },
@@ -228,7 +221,7 @@ export class AuthService {
     const email = existedUser.email;
 
     const checkOtpCode = await this.cacheManager.get(email);
-    console.log(checkOtpCode, email);
+
     if (!checkOtpCode) {
       throw new BadRequestException('Otp has expired.');
     }
@@ -238,7 +231,7 @@ export class AuthService {
     }
 
     const newPassword = generateRandomString(10);
-    const newHashedPassword = await this.hashPassword(newPassword);
+    const newHashedPassword = await hashPassword(newPassword);
 
     await this.userRepository.update(
       { id: existedUser.id },

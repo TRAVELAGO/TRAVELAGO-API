@@ -1,10 +1,15 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from './user.entity';
 import { UserInfoDto } from './dtos/user-info.dto';
 import * as bcrypt from 'bcrypt';
 import { FilesService } from '@modules/files/files.service';
+import { hashPassword } from 'src/utils/hash';
 
 @Injectable()
 export class UserService {
@@ -44,44 +49,24 @@ export class UserService {
 
   async changePassword(
     userId: string,
+    oldPassword: string,
     newPassword: string,
-    passwordConfirm: string,
   ): Promise<any> {
     const user = await this.userRepository.findOne({
       where: { id: userId },
     });
+
     if (!user) {
-      throw new Error('User not found');
-    } else {
-      if (newPassword === passwordConfirm) {
-        const pass = await this.hashPassword(newPassword);
-        const checkPass = bcrypt.compareSync(pass, user.password);
-        if (checkPass) {
-          try {
-            await this.userRepository.update(userId, { password: pass });
-          } catch {
-            throw new Error('Not connect Database');
-          }
-        } else {
-          throw new HttpException(
-            'Not connect Databse',
-            HttpStatus.BAD_REQUEST,
-          );
-        }
-      } else {
-        throw new HttpException(
-          'Password is not correct.',
-          HttpStatus.BAD_REQUEST,
-        );
-      }
+      throw new NotFoundException('User not found');
     }
-  }
 
-  private async hashPassword(password: string): Promise<string> {
-    const saltRound = 10;
-    const salt = await bcrypt.genSalt(saltRound);
-    const hash = await bcrypt.hash(password, salt);
+    const hashNewPassword = await hashPassword(newPassword);
+    const checkOldPassword = bcrypt.compareSync(oldPassword, user.password);
 
-    return hash;
+    if (!checkOldPassword) {
+      throw new UnauthorizedException('Password is not correct.');
+    }
+
+    await this.userRepository.update(userId, { password: hashNewPassword });
   }
 }

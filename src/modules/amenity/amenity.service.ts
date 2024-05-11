@@ -16,7 +16,7 @@ export class AmenityService {
 
   async seedData(): Promise<void> {
     // Tạo dữ liệu mới
-    const Amenities = [
+    const amenities = [
       { name: 'Wi-Fi', description: 'Truy cập internet tốc độ cao' },
       { name: 'Bể Bơi', description: 'Bể bơi ngoài trời' },
       {
@@ -84,8 +84,6 @@ export class AmenityService {
       },
     ];
 
-    await this.amenityRepository.save(Amenities);
-
-    console.log('Seed data for amenities inserted successfully.');
+    await this.amenityRepository.save(amenities);
   }
 }
