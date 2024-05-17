@@ -1,5 +1,5 @@
 export enum FeedbackStatus {
-    PENDDING = "PENDING",
-    RESOLVED = "RESOLVED"
-  }
-  
+  NEW = 'new',
+  REPORTED = 'reported',
+  VALID = 'valid',
+}
