@@ -16,6 +16,7 @@ import { JwtService } from '@nestjs/jwt';
 import { JwtPayloadType } from './strategies/types/jwt-payload.type';
 import { Token } from './strategies/types/login.type';
 import { ConfigService } from '@nestjs/config';
+import { UserStatus } from '@constants/user-status';
 
 @Injectable()
 export class AdminService {
@@ -92,7 +93,7 @@ export class AdminService {
     return this.userRepository.find({
       where: {
         role: Equal(RoleType.HOTEL),
-        status: 0,
+        status: UserStatus.WAIT_ACTIVE,
       },
     });
   }
