@@ -4,85 +4,91 @@ import {
   Get,
   Body,
   Param,
-  Put,
+  Query,
+  Patch,
+  Delete,
   UseGuards,
+  HttpStatus,
+  HttpCode,
 } from '@nestjs/common';
 import { CreateFeedbackDto } from './dtos/create-feedback.dto';
 import { ApiTags } from '@nestjs/swagger';
 import { FeedbackService } from './feedback.services';
-import { JwtAuthGuard } from '@modules/auth/guards/jwt-auth.guard';
 import { Feedback } from './feedback.entity';
 import { RoleType } from '@constants/role-type';
 import { Roles } from '@decorators/roles.decorator';
-import { ReplyFeedbackDto } from './dtos/feedbackHotelReply.Dto';
+import { PageOptionsDto } from 'src/common/dtos/page-option.dto';
+import { PageDto } from 'src/common/dtos/page.dto';
+import { GetJwtPayload } from '@decorators/get-jwt-payload.decorator';
+import { JwtPayloadType } from '@modules/auth/strategies/types/jwt-payload.type';
+import { UpdateFeedbackDto } from './dtos/update-feedback.dto';
+import { ApiBearerAuth } from '@nestjs/swagger';
+import { JwtAuthGuard } from '@modules/auth/guards/jwt-auth.guard';
 
 @ApiTags('Feedback')
-@Controller('feedback')
+@Controller()
 export class FeedbackController {
   constructor(private readonly feedbackService: FeedbackService) {}
 
-  @UseGuards(JwtAuthGuard)
-  @Get(':idUser')
-  @Roles(RoleType.USER)
-  async getAllFeedbacks(@Param('idUser') idUser: string): Promise<Feedback[]> {
-    return this.feedbackService.getAllFeedbacks(idUser);
+  @Get('rooms/:roomId/feedbacks')
+  async getFeedbacksOfRoom(
+    @Param('roomId') userId: string,
+    @Query() pageOptionsDto: PageOptionsDto,
+  ): Promise<PageDto<Feedback>> {
+    return this.feedbackService.getFeedbacksOfRoom(userId, pageOptionsDto);
   }
 
-  @UseGuards(JwtAuthGuard)
-  @Get(':idUser/replyfromHotel')
-  @Roles(RoleType.USER)
-  async getAllreply(@Param('idUser') idUser: string): Promise<Feedback[]> {
-    return this.feedbackService.getAllReply(idUser);
+  @Get('hotels/:hotelId/feedbacks')
+  async getFeedbacksOfHotel(
+    @Param('hotelId') hotelId: string,
+    @Query() pageOptionsDto: PageOptionsDto,
+  ): Promise<PageDto<Feedback>> {
+    return this.feedbackService.getFeedbacksOfHotel(hotelId, pageOptionsDto);
   }
 
-  @UseGuards(JwtAuthGuard)
-  @Put(':id')
   @Roles(RoleType.USER)
-  async updateFeedback(
-    @Param('id') id: string,
-    @Body() feedbackData: CreateFeedbackDto,
-  ) {
-    return this.feedbackService.updateFeedback(id, feedbackData);
-  }
-
-  @UseGuards(JwtAuthGuard)
-  @Roles(RoleType.USER)
-  @Post(':userId/:roomId/create')
+  @Post('rooms/:roomId/feedbacks')
   async create(
-    @Param('userId') userId: string,
+    @GetJwtPayload() user: JwtPayloadType,
     @Param('roomId') roomId: string,
     @Body() feedbackData: CreateFeedbackDto,
   ) {
-    await this.feedbackService.create(userId, roomId, feedbackData);
+    return await this.feedbackService.create(user.id, roomId, feedbackData);
   }
 
+  @Patch('feedbacks/:id/report')
+  @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
-  @Post(':idHotel/reply/:feedbackId')
-  @Roles(RoleType.HOTEL)
-  async replyFeedback(
-    @Param('feedbackId') feedbackId: string,
-    @Param('hotelId') hotelId: string,
-    @Body() replyFeedback: ReplyFeedbackDto,
+  @HttpCode(HttpStatus.OK)
+  async reportFeedback(@Param('id') feedbackId: string) {
+    await this.feedbackService.reportFeedback(feedbackId);
+  }
+
+  @Roles(RoleType.USER)
+  @Patch('feedbacks/:id')
+  async getFeedback(
+    @Param('id') feedbackId: string,
+    @GetJwtPayload() user: JwtPayloadType,
+    @Body() updateFeedbackDto: UpdateFeedbackDto,
   ) {
-    return this.feedbackService.hotelReplyFeedbacks(
+    return this.feedbackService.updateFeedback(
       feedbackId,
-      hotelId,
-      replyFeedback,
+      user.id,
+      updateFeedbackDto,
     );
   }
 
-  @UseGuards(JwtAuthGuard)
-  @Roles(RoleType.HOTEL)
-  @Post(':idUserHotel')
-  async hotelGetAllFeedbacks(
-    @Param('idUser') idUser: string,
-  ): Promise<Feedback[]> {
-    return this.feedbackService.hotelGetAllFeedbacks(idUser);
+  @Roles(RoleType.USER)
+  @Delete('feedbacks/:id')
+  async deleteFeedback(
+    @Param('id') feedbackId: string,
+    @GetJwtPayload() user: JwtPayloadType,
+  ) {
+    return this.feedbackService.deleteFeedback(feedbackId, user.id);
   }
 
-  @UseGuards(JwtAuthGuard)
   @Roles(RoleType.USER)
-  @Get(':userId/getSuggestedRooms')
+  @Get(':userId/get-suggested-rooms')
   async getSuggestedRooms(@Param('userId') userId: string) {
     const rooms = await this.feedbackService.getSuggestedRooms(userId);
     return rooms;

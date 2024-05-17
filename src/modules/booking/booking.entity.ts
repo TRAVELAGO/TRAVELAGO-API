@@ -1,5 +1,6 @@
 import { BookingStatus } from '@constants/booking-status';
 import { BookingType } from '@constants/booking-type';
+import { Feedback } from '@modules/feedback/feedback.entity';
 import { Hotel } from '@modules/hotel/hotel.entity';
 import { Payment } from '@modules/payment/payment.entity';
 import { Room } from '@modules/room/room.entity';
@@ -42,15 +43,18 @@ export class Booking {
   @Column({ type: 'text', nullable: true })
   paymentUrl: string;
 
-  @ManyToOne(() => Voucher)
-  @JoinColumn({ name: 'voucherId' })
-  voucher: Voucher;
+  @Column({ default: false })
+  isFeedback: boolean;
 
   @CreateDateColumn({ type: 'timestamp' })
   createdAt: Date;
 
   @UpdateDateColumn({ type: 'timestamp' })
   updatedAt: Date;
+
+  @ManyToOne(() => Voucher)
+  @JoinColumn({ name: 'voucherId' })
+  voucher: Voucher;
 
   @ManyToOne(() => User)
   user: User;
@@ -61,6 +65,9 @@ export class Booking {
   @ManyToOne(() => Room, (room) => room.bookings)
   @JoinColumn({ name: 'roomId' })
   room: Room;
+
+  @OneToOne(() => Feedback, (feedback) => feedback.booking)
+  feedback: Feedback;
 
   @OneToOne(() => Payment, (payment) => payment.booking)
   payment: Payment;

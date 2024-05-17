@@ -1,17 +1,36 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { getPaginationOption, getOrderOption } from 'src/utils/pagination';
+import {
+  BadRequestException,
+  ForbiddenException,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Double, In, MoreThanOrEqual, Repository } from 'typeorm';
+import {
+  DataSource,
+  FindManyOptions,
+  In,
+  LessThanOrEqual,
+  QueryRunner,
+  Repository,
+} from 'typeorm';
 import { Feedback } from './feedback.entity';
 import { CreateFeedbackDto } from './dtos/create-feedback.dto';
-import { User } from '../user/user.entity';
 import { Booking } from '@modules/booking/booking.entity';
 import { Room } from '@modules/room/room.entity';
 import { Hotel } from '@modules/hotel/hotel.entity';
-import { BookingStatus } from '@constants/booking-status';
 import { FeedbackStatus } from '@constants/feedback-status';
-import { ReplyFeedbackDto } from './dtos/feedbackHotelReply.Dto';
-import { RoleType } from '@constants/role-type';
-import { City } from '@modules/city/city.entity';
+import { PageOptionsDto } from 'src/common/dtos/page-option.dto';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { Cache } from 'cache-manager';
+import { PageDto } from 'src/common/dtos/page.dto';
+import { PageMetaDto } from 'src/common/dtos/page-meta.dto';
+import { format, toZonedTime } from 'date-fns-tz';
+import { VN_TIME_ZONE } from '@constants/constants';
+import { BookingStatus } from '@constants/booking-status';
+import { TypeUpdateRate } from '@constants/type-update-rate';
+import { UpdateFeedbackDto } from './dtos/update-feedback.dto';
 
 @Injectable()
 export class FeedbackService {
@@ -24,206 +43,314 @@ export class FeedbackService {
     private readonly roomRepository: Repository<Room>,
     @InjectRepository(Hotel)
     private readonly hotelRepository: Repository<Hotel>,
-    // @InjectRepository(City)
-    // private readonly cityRepository: Repository<City>,
-  ) { }
+    @Inject(CACHE_MANAGER) private cacheManager: Cache,
+    private dataSource: DataSource,
+  ) {}
 
-  async createFeedback(feedbackData: CreateFeedbackDto): Promise<Feedback> {
-    const feedback = this.feedbackRepository.create(feedbackData);
-    return await this.feedbackRepository.save(feedback);
+  public async getFeedbackById(feedbackId: string): Promise<Feedback> {
+    const feedback = await this.feedbackRepository.findOne({
+      where: { id: feedbackId },
+    });
+
+    return feedback;
   }
 
-  async getAllFeedbacks(idUser: string): Promise<Feedback[]> {
-    return await this.feedbackRepository.find({
-      where: { user: { id: idUser }, userSend: RoleType.USER }
-    });
+  public async getFeedbacksOfRoom(
+    roomId: string,
+    pageOptionsDto: PageOptionsDto,
+  ): Promise<PageDto<Feedback>> {
+    const findFeedbackOfRoomOptions: FindManyOptions<Feedback> = {
+      where: {
+        room: { id: roomId },
+      },
+    };
+    return this.getFeedbacks(findFeedbackOfRoomOptions, pageOptionsDto);
   }
 
-  async getAllReply(idUser: string): Promise<Feedback[]> {
-    return await this.feedbackRepository.find({
-      where: { user: { id: idUser }, userSend: RoleType.HOTEL }
-    });
+  public async getFeedbacksOfHotel(
+    hotelId: string,
+    pageOptionsDto: PageOptionsDto,
+  ): Promise<PageDto<Feedback>> {
+    const findFeedbackOfHotelOptions: FindManyOptions<Feedback> = {
+      where: {
+        room: { hotel: { id: hotelId } },
+      },
+    };
+    return this.getFeedbacks(findFeedbackOfHotelOptions, pageOptionsDto);
   }
 
-  async hotelGetAllFeedbacks(idUser: string): Promise<Feedback[]> {
+  private async getFeedbacks(
+    findFeedbackOptions: FindManyOptions<Feedback>,
+    pageOptionsDto: PageOptionsDto,
+  ): Promise<PageDto<Feedback>> {
+    const [feedbacks, itemCount] = await this.feedbackRepository.findAndCount({
+      ...findFeedbackOptions,
+      ...getPaginationOption(
+        pageOptionsDto.pageNumber,
+        pageOptionsDto.pageSize,
+      ),
+      ...(await getOrderOption(
+        Feedback,
+        pageOptionsDto.order,
+        this.cacheManager,
+      )),
+    });
 
-    const hotels = this.hotelRepository.find({
-      where: {user: {id: idUser}}
-    })
-    const hotelIds = (await hotels).map(hotel => hotel.id)
-    console.log(hotelIds)
-    console.log("121")
-    const rooms = await this.roomRepository.find({
-      where: { hotel: { id: In(hotelIds) }}
+    const pageMetaDto = new PageMetaDto({
+      itemCount,
+      pageOptionsDto,
     });
-    // const rooms = this.roomRepository.find({
-    //   where: { hotel: { id: idHotel } }
-    // });
-    console.log(rooms)
-    const roomIds = (await rooms).map(room => room.id);
-    console.log("assa")
-    console.log(roomIds)
-    const allFeedbacks = await this.feedbackRepository.find({
-      where: { room: { id: In(roomIds) }, userSend: RoleType.USER }
-    });
-    return allFeedbacks;
+
+    return new PageDto(feedbacks, pageMetaDto);
   }
 
-  async updateFeedback(
-    id: string,
+  public async updateFeedback(
+    feedbackId: string,
+    userId: string,
+    updateFeedbackDto: UpdateFeedbackDto,
+  ): Promise<Feedback> {
+    const feedback = await this.feedbackRepository
+      .createQueryBuilder('f')
+      .where('id = :feedbackId', { feedbackId })
+      .andWhere('userId = :userId', { userId })
+      .select('id, rate, comment, status, roomId, createdAt, updatedAt')
+      .getRawOne();
+
+    if (!feedback) {
+      throw new ForbiddenException();
+    }
+
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    try {
+      if (updateFeedbackDto.rate && updateFeedbackDto.rate !== feedback.rate) {
+        const differenceFeedbackRate = updateFeedbackDto.rate - feedback.rate;
+        await this.updateRoomRate(
+          queryRunner,
+          feedback.roomId,
+          differenceFeedbackRate,
+          TypeUpdateRate.UPDATE_FEEDBACK,
+        );
+      }
+
+      this.feedbackRepository.merge(feedback, updateFeedbackDto);
+      queryRunner.manager.update(Feedback, feedback.id, updateFeedbackDto);
+      await queryRunner.commitTransaction();
+
+      return feedback;
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
+  public async deleteFeedback(
+    feedbackId: string,
+    userId: string,
+  ): Promise<Feedback> {
+    const feedback = await this.feedbackRepository
+      .createQueryBuilder('f')
+      .where('id = :feedbackId', { feedbackId })
+      .andWhere('userId = :userId', { userId })
+      .select('id, rate, comment, status, roomId, createdAt, updatedAt')
+      .getRawOne();
+
+    if (!feedback) {
+      throw new ForbiddenException();
+    }
+
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    try {
+      await this.updateRoomRate(
+        queryRunner,
+        feedback.roomId,
+        feedback.rate,
+        TypeUpdateRate.DELETE_FEEDBACK,
+      );
+      await queryRunner.manager.delete(Feedback, feedbackId);
+      await queryRunner.commitTransaction();
+
+      return feedback;
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
+  public async create(
+    userId: string,
+    roomId: string,
     feedbackData: CreateFeedbackDto,
   ): Promise<Feedback> {
-    const feedback = await this.feedbackRepository.findOne({
-      where: { id: id, userSend: RoleType.USER },
-    });
-    if (!feedback) {
-      throw new Error('Feedback not found');
-    }
-    Object.assign(feedback, feedbackData);
-    return await this.feedbackRepository.save(feedback);
-  }
-
-  async create(userId: string, roomId: string, feedbackData: CreateFeedbackDto): Promise<Feedback> {
-    const booking = await this.bookingRepository.find({
+    const booking = await this.bookingRepository.findOne({
       where: {
         user: { id: userId },
         room: { id: roomId },
-        status: BookingStatus.CHECK_IN,
-        // dateTo: MoreThanOrEqual(new Date()),
+        isFeedback: false,
+        dateTo: LessThanOrEqual(
+          format(toZonedTime(new Date(), VN_TIME_ZONE), 'yyyy-MM-dd'),
+        ),
+        status: In([BookingStatus.PAID, BookingStatus.CHECK_IN]),
+      },
+      select: {
+        id: true,
       },
     });
 
     if (!booking) {
-      throw new NotFoundException('Invalid booking for feedback');
+      throw new ForbiddenException();
     }
 
-    const reportFeedback = await this.feedbackRepository.create({
-      rate: feedbackData.rate,
-      comment: feedbackData.comment,
-      status: FeedbackStatus.PENDDING,
-      userSend: RoleType.USER,
-      user: { id: userId },
-      room: { id: roomId },
-    });
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
 
-    this.feedbackRepository.save(reportFeedback);
+    try {
+      const newFeedback = await this.feedbackRepository.create({
+        rate: feedbackData.rate,
+        comment: feedbackData.comment,
+        status: FeedbackStatus.NEW,
+        user: { id: userId },
+        room: { id: roomId },
+        booking: { id: booking.id },
+      });
 
-    const room = await this.roomRepository.findOne({
-      where: { id: roomId }
-    });
-    const rate = await this.calculateRoomRate(roomId);
-    room.rate = rate;
-    await this.roomRepository.save(room);
-    const hotel = await this.hotelRepository.findOne({
-      where: { rooms: { id: roomId } }
-    });
-    hotel.rate = await this.calculateHotelRate(hotel.id);
-    room.rate = rate;
-    await this.hotelRepository.save(hotel);
-    return await this.feedbackRepository.save(reportFeedback);
+      await queryRunner.manager.update(Booking, booking.id, {
+        isFeedback: true,
+      });
+      await this.updateRoomRate(
+        queryRunner,
+        roomId,
+        newFeedback.rate,
+        TypeUpdateRate.NEW_FEEDBACK,
+      );
+      await queryRunner.manager.save(newFeedback);
+      await queryRunner.commitTransaction();
+
+      return newFeedback;
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
   }
 
+  public async reportFeedback(feedbackId: string) {
+    const existedFeedback = await this.feedbackRepository.findOne({
+      where: { id: feedbackId },
+      select: {
+        id: true,
+        status: true,
+      },
+    });
 
-  async calculateRoomRate(roomId: string): Promise<number> {
-    const feedbacks = await this.feedbackRepository.find({
+    if (!existedFeedback) {
+      throw new NotFoundException('Feedback not exists.');
+    }
+    if (existedFeedback.status === FeedbackStatus.VALID) {
+      throw new BadRequestException('Cannot report feedback.');
+    }
+    if (existedFeedback.status === FeedbackStatus.REPORTED) {
+      return;
+    }
+
+    await this.feedbackRepository.update(feedbackId, {
+      status: FeedbackStatus.REPORTED,
+    });
+  }
+
+  public async updateRoomRate(
+    queryRunner: QueryRunner,
+    roomId: string,
+    differenceFeedbackRate: number,
+    typeUpdate: TypeUpdateRate,
+  ): Promise<void> {
+    const existedRoom: {
+      hotelId: string;
+      rate: any;
+    } = await this.roomRepository
+      .createQueryBuilder('r')
+      .select('hotelId, rate')
+      .where('r.id = :roomId', { roomId })
+      .getRawOne();
+
+    const countFeedbacks = await this.feedbackRepository.count({
       where: {
         room: { id: roomId },
-        userSend: RoleType.USER
       },
-      select: ['rate']
     });
 
-    const rates = feedbacks.map(feedback => parseFloat((feedback as any).rate));
-    const sum = rates.reduce((total, rate) => total + rate, 0);
-    const averageRate = rates.length > 0 ? sum / rates.length : 0;
-    return averageRate;
-  }
+    const rateAdjustment =
+      typeUpdate === TypeUpdateRate.DELETE_FEEDBACK
+        ? -1
+        : typeUpdate === TypeUpdateRate.NEW_FEEDBACK
+          ? 1
+          : 0;
+    const newRoomRate =
+      countFeedbacks > 0
+        ? countFeedbacks + rateAdjustment > 0
+          ? (Number(existedRoom.rate) * countFeedbacks +
+              (rateAdjustment !== 0
+                ? rateAdjustment * differenceFeedbackRate
+                : differenceFeedbackRate)) /
+            (countFeedbacks + rateAdjustment)
+          : null
+        : differenceFeedbackRate;
 
-  async calculateHotelRate(hotelId: string): Promise<number> {
-    const rooms = await this.roomRepository.find({
-      where: {
-        hotel: { id: hotelId }
-      },
-      select: ['rate']
+    await queryRunner.manager.update(Room, roomId, {
+      rate: newRoomRate,
     });
-
-    const rates = rooms.map(feedback => feedback.rate);
-
-    const sum = rates.reduce((total, rate) => total + rate, 0);
-    const averageRate = rates.length > 0 ? sum / rates.length : 0;
-
-    return averageRate;
+    await this.updateHotelRate(
+      queryRunner,
+      existedRoom.hotelId,
+      roomId,
+      newRoomRate,
+    );
   }
 
-  async hotelReplyFeedbacks(hotelId: string, feedbackId: string, replyFeedback: ReplyFeedbackDto) {
-    const hotel = await this.hotelRepository.findOne({
-      where: { id: hotelId }
-    })
-    console.log("aaa")
-    if (!hotel) {
+  public async updateHotelRate(
+    queryRunner: QueryRunner,
+    hotelId: string,
+    roomId: string,
+    newRoomRate: number,
+  ): Promise<void> {
+    const listRoomRated: {
+      rate: string;
+    }[] = await this.roomRepository
+      .createQueryBuilder('r')
+      .select('r.rate as rate')
+      .where('r.rate IS NOT NULL')
+      .andWhere('r.hotelId = :hotelId', { hotelId })
+      .andWhere('r.id <> :roomId', { roomId })
+      .getRawMany();
+    let sumRoomRate = newRoomRate;
+    listRoomRated.forEach(
+      (roomRated) => (sumRoomRate += Number(roomRated.rate)),
+    );
 
-    }
-
-    const reply = await this.feedbackRepository.create({
-      ...replyFeedback,
-      userSend: RoleType.HOTEL,
-      status: FeedbackStatus.RESOLVED
-    }
-    )
-    
-    const savedReply = await this.feedbackRepository.save(reply);
-    console.log("bbb");
-    const feedback = await this.feedbackRepository.findOne({
-      where: { id: feedbackId }
-    })
-    if (!feedback) {
-
-    } else {
-      await this.feedbackRepository.update(
-        { id: feedbackId },
-        { status: FeedbackStatus.RESOLVED }
-      )
-    }
-    console.log("ccc");
-    return savedReply
+    const averageRoomRate = sumRoomRate / (listRoomRated.length + 1);
+    await queryRunner.manager.update(Hotel, hotelId, {
+      rate: averageRoomRate > 0 ? averageRoomRate : null,
+    });
   }
 
-  async findRoomsByHotel(hotelId: string): Promise<Room[]> {
-    return this.roomRepository.find({ where: { hotel: { id: hotelId } } });
-  }
-
-  async getSuggestedRooms(userId: string): Promise<Room[]> {
+  public async getSuggestedRooms(userId: string): Promise<Room[]> {
     const bookedRoomIds = await this.getBookedRoomIds(userId);
     const bookedRooms = await this.roomRepository
       .createQueryBuilder('room')
       .whereInIds(bookedRoomIds)
       .innerJoinAndSelect('room.hotel', 'hotel')
       .getMany();
-//     console.log("184")
-//     console.log(bookedRooms)
 
-//     const hotelEntities: Hotel[] = bookedRooms.map(room => room.hotel);
-
-//     const hotelIds: string[] = bookedRooms.map(room => room.hotel.id);
-//     console.log(hotelIds);
-
-//     const citiess = await this.hotelRepository
-//       .createQueryBuilder('hotel')
-//       .innerJoinAndSelect('hotel.city', 'city')
-//       .whereInIds(hotelIds)
-//       .getMany();
-
-//     console.log(citiess)
-//     console.log("189")
-
-// const cityNames: string[] = citiess.map(hotel => hotel.city.name);
-
-// console.log(cityNames);
-
-//     console.log("192")
-//     console.log(cityNames);
     const averagePrice = this.calculateAveragePrice(bookedRooms);
-    console.log(averagePrice)
     const threshold = 30000;
 
     const suggestedRooms = await this.roomRepository
@@ -239,26 +366,23 @@ export class FeedbackService {
   private async getBookedRoomIds(userId: string): Promise<string[]> {
     const bookings = await this.bookingRepository.find({
       where: { user: { id: userId } },
-      relations: [
-        "room"
-      ],
+      relations: ['room'],
     });
 
     const roomIds = bookings.map((booking) => booking.room.id);
     return roomIds;
-
   }
 
   private calculateAveragePrice(rooms: Room[]): number {
     if (rooms.length === 0) {
       return 0;
     }
-    let totalAmount: number[] = []
-    rooms.forEach(room => {
-      totalAmount.push(Number(room.price))
-    })
-    let total: number = 0
-    for(let i =0; i < totalAmount.length; i++) {
+    const totalAmount: number[] = [];
+    rooms.forEach((room) => {
+      totalAmount.push(Number(room.price));
+    });
+    let total: number = 0;
+    for (let i = 0; i < totalAmount.length; i++) {
       total = total + totalAmount[i];
     }
     const averagePrice = total / rooms.length;

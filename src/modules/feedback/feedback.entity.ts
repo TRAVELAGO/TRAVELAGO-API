@@ -1,5 +1,5 @@
 import { FeedbackStatus } from '@constants/feedback-status';
-import { RoleType } from '@constants/role-type';
+import { Booking } from '@modules/booking/booking.entity';
 import { Room } from '@modules/room/room.entity';
 import { User } from '@modules/user/user.entity';
 import {
@@ -9,6 +9,8 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   ManyToOne,
+  OneToOne,
+  JoinColumn,
 } from 'typeorm';
 
 @Entity()
@@ -22,22 +24,22 @@ export class Feedback {
   @Column({ type: 'text' })
   comment: string;
 
+  @Column({ type: 'varchar', length: 20 })
+  status: FeedbackStatus;
+
   @CreateDateColumn({ type: 'timestamp' })
   createdAt: Date;
 
   @UpdateDateColumn({ type: 'timestamp' })
   updatedAt: Date;
 
-  @Column({ type: 'text' })
-  status: FeedbackStatus;
-
-  @Column({ type: 'text' })
-  userSend: RoleType;
-
-  @ManyToOne(() => User, user => user.feedbacks)
+  @ManyToOne(() => User, (user) => user.feedbacks)
   user: User;
 
   @ManyToOne(() => Room, (room) => room.feedbacks)
   room: Room;
 
+  @OneToOne(() => Booking, (booking) => booking.feedback)
+  @JoinColumn({ name: 'bookingId' })
+  booking: Booking;
 }
