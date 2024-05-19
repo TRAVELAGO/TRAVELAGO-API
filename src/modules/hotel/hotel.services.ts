@@ -146,7 +146,7 @@ export class HotelService {
   async searchNearestHotel(searchHotelDto: SearchHotelDto): Promise<any> {
     const query = this.dataSource
       .createQueryBuilder()
-      .select('MIN(RoomAvailable.price)', 'minRoomPrice')
+      .select('MIN(roomAvailable.price)', 'minRoomPrice')
       .addSelect('nearestHotel.*')
       .from(
         this.subQueryFactoryNearestHotel(
