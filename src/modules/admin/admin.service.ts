@@ -93,7 +93,7 @@ export class AdminService {
     return this.userRepository.find({
       where: {
         role: Equal(RoleType.HOTEL),
-        status: UserStatus.WAIT_ACTIVE,
+        status: Equal(UserStatus.WAIT_ACTIVE),
       },
     });
   }
